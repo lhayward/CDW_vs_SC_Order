@@ -37,8 +37,6 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
   this->numBins         = numBins;
   this->outputFileName  = outputFileName;
   
-  std::cout << "In Sim const, w = " << w << std::endl;
-  
   spins = new VecND*[N];
   //for( int i=0; i<N; i++ )
   //{ spins[i] = getRandomVecND_1(); }
@@ -54,8 +52,8 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
   mag = new VecND(spinDim,0);
   calculateMagnetization();
   
-  //cluster  = new vector<int>;
-  //buffer   = new vector<int>;
+  cluster  = new vector<int>;
+  buffer   = new vector<int>;
 }
 
 /********************************* ~Simulation (destructor) *********************************/
@@ -72,6 +70,9 @@ Simulation::~Simulation()
   if(mag!=NULL)
   { delete mag; }
   mag = NULL;
+  
+  delete cluster;
+  delete buffer;
 }
 
 /****************************************** runSim ******************************************/ 
@@ -137,9 +138,9 @@ void Simulation::runSim()
         //put this section in to avoid rounding errors (rather than trusting the energy and
         //magnetization we have been updating ourselves):
         calculateEnergy();
-        
         calculateMagnetization();
         calculateIsingOrder();
+        
         currn = mag->getMultiple(1.0/N);
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
@@ -270,11 +271,22 @@ void Simulation::calculateMagnetization()
 }
 
 /*************************************** clearCluster ***************************************/ 
-/*void Simulation::clearCluster()
+void Simulation::clearCluster()
 {
   while( !cluster->empty() )
   { cluster->pop_back(); }
-}*/
+}
+
+/**************************************** flipCluster *****************************************
+* This function flips all spins in the cluster by using the passed vector r.
+**********************************************************************************************/
+void Simulation::flipCluster(VecND* r)
+{
+  int clustSize = (int)cluster->size();
+  
+  for( int i=0; i<clustSize; i++ )
+  { spins[cluster->at(i)]->reflectAndNormalize(r); } //for loop
+}
 
 /***************************************** flipSpin ******************************************
 * The function reflects the spin at the passed site about the hyperplane orthogonal to the 
@@ -282,7 +294,7 @@ void Simulation::calculateMagnetization()
 *********************************************************************************************/
 /*void Simulation::flipSpin(int site, Vec4D* r)
 {
-  int numNeighbours = 6;
+  int numNeighbours = 4;
   double deltaE;
   Vec4D* nnSum = new Vec4D(spinDim,0);
   
@@ -305,6 +317,30 @@ void Simulation::calculateMagnetization()
   { delete nnSum; }
   nnSum = NULL;
 }*/
+
+/*********************************** getClusterOnSiteEnergy ***********************************
+* This function calculates the onsite (non-interacting) part of the energy corresponding to 
+* the spins in the cluster.
+**********************************************************************************************/
+double Simulation::getClusterOnSiteEnergy()
+{
+  int clustSize = (int)cluster->size();
+  int site;
+  double energyg=0;
+  double energyw=0;
+  
+  for( int i=0; i<clustSize; i++ )
+  {
+    site = cluster->at(i);
+    energyg += spins[site]->getSquareForRange(2,spinDim-1);
+    energyw += pow(spins[i]->getSquareForRange(2,3),2.0) 
+                 + pow(spins[i]->getSquareForRange(4,5),2.0);
+  } //for loop
+  
+  energyg *= (g + 4.0*(lambda-1.0))/2.0;
+  energyw *= w/2.0;
+  return J*(energyg + energyw);
+}
 
 /************************************** getCorrelation ***************************************/
 double Simulation::getCorrelation(int i, int j)
@@ -427,7 +463,7 @@ double Simulation::getSFPhi()
 /**************************************** isInCluster ****************************************
 * This function checks whether or not spin at the passed site is in the cluster.
 *********************************************************************************************/  
-/*bool Simulation::isInCluster(int site)
+bool Simulation::isInCluster(int site)
 {
   int i;
   int clustSize = (int)cluster->size();
@@ -442,7 +478,7 @@ double Simulation::getSFPhi()
   }  //closes while loop
   
   return found;
-}*/
+}
 
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
@@ -468,9 +504,10 @@ void Simulation::metropolisStep()
   
   if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
   {
-    energy += deltaE;
-    mag->subtract(spins[site]);
-    mag->add(sNew);
+    //Calculate energy and mag before writing to file, not now:
+    //energy += deltaE;
+    //mag->subtract(spins[site]);
+    //mag->add(sNew);
     
     //delete the vector storing the old state of the spin:
     if(spins[site]!=NULL)
@@ -560,7 +597,7 @@ void Simulation::sweep()
   for( i=0; i<N1; i++ )
   { metropolisStep(); }
   
-  //wolffStep();
+  wolffStep();
   
   for( i=0; i<N2; i++ )
   { metropolisStep(); }
@@ -568,12 +605,17 @@ void Simulation::sweep()
 
 /***************************************** wolffStep ****************************************/
 void Simulation::wolffStep()
-{/*
-  int numNeighbours = 6;
+{
+  int numNeighbours = 4;
   int i, site;
   double PAdd;
   double exponent;  //exponent for PAdd
-  Vec4D* r = new VecND(spinDim,randomGen);
+  VecND* r = new VecND(spinDim,randomGen);
+  VecND* reflectedSpin;
+  double onsiteEnergy_initial;
+  double onsiteEnergy_final;
+  double onsiteEnergy_diff;
+  double PAcceptCluster;
   
   site = randomGen->randInt(N-1);
   //flipSpin(site, r);
@@ -588,22 +630,46 @@ void Simulation::wolffStep()
     {
       //Note: spins[site] is not flipped yet so we have to consider the energy difference that
       //      would result if it were already flipped:
-      exponent = (2.0*J/T)*( r->dot(spins[site]) ) * ( r->dot(spins[neighbours[site][i]]) );
+      reflectedSpin = spins[site]->getReflection(r);
+      exponent = (2.0*J/T)*( r->dot(reflectedSpin) ) * ( r->dot(spins[neighbours[site][i]]) );
       if (exponent < 0 )
       {
         PAdd = 1.0 - exp(exponent);
         if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
-        { flipSpin(neighbours[site][i],r); }
+        { 
+          //flipSpin(neighbours[site][i],r); 
+          cluster->push_back( neighbours[site][i] );
+          buffer ->push_back( neighbours[site][i] );
+        }
       }
-    }  //closes for loop over neighbours
-  }
-
+      
+      if(reflectedSpin!=NULL)
+      { delete reflectedSpin; }
+      reflectedSpin = NULL;
+    }  //for loop over neighbours
+  } //while loop for buffer
+  
   //flip the cluster if it is accepted:
+  onsiteEnergy_initial = getClusterOnSiteEnergy();
+  flipCluster(r);
+  onsiteEnergy_final = getClusterOnSiteEnergy();
+  onsiteEnergy_diff = onsiteEnergy_final - onsiteEnergy_initial;
+  
+  //If the onsite energy diff. is negative, accept the cluster move. If the onsite energy 
+  //diff. is positive, accept the cluster move with probability exp^(-beta*onsiteEnery_diff).
+  //Note: cluster is already flipped currently, so this is a check to see if we need to flip 
+  //      it back:
+  if( onsiteEnergy_diff > 0 )
+  {
+    PAcceptCluster = exp(-1.0*onsiteEnergy_diff/T);
+    //check if we need to flip the cluster back to its original orientation:
+    if( randomGen->randDblExc() > PAcceptCluster )
+    { flipCluster(r); }
+  }
   
   clearCluster();
   
   if(r!=NULL)
   { delete r; }
   r = NULL;
-  */
 }

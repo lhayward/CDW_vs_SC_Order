@@ -22,7 +22,7 @@ class VecND
     uint    N_;  //dimensionality of the vector
     double* v_;  //components of the ND vector
   
-    VecND(VecND* oldVec); //copy constructor
+    VecND(uint N, VecND* oldVec); //copy constructor
     VecND(uint N, double val);
     VecND(uint N, int val);
     VecND(uint N, MTRand* randomGen);

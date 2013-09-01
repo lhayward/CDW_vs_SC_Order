@@ -13,9 +13,11 @@
 using namespace std;
 
 /************************************ VecND (constructor) ***********************************/
-VecND::VecND(VecND* oldVec)
+VecND::VecND(uint N, VecND* oldVec)
 {
-  cout << "COPY" << endl;
+  N_ = N;
+  v_ = new double[N];
+  
   for( uint i=0; i<N_; i++)
   { v_[i] = oldVec->v_[i]; }
 }
@@ -163,7 +165,7 @@ VecND* VecND::getMultiple(double c)
 /*************************************** getReflection ***************************************/
 VecND* VecND::getReflection(VecND* r)
 {
-  VecND* result = new VecND(this);
+  VecND* result = new VecND(N_, this);
   result->reflectAndNormalize(r);
   return result;
 }
