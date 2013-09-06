@@ -333,8 +333,8 @@ double Simulation::getClusterOnSiteEnergy()
   {
     site = cluster->at(i);
     energyg += spins[site]->getSquareForRange(2,spinDim-1);
-    energyw += pow(spins[i]->getSquareForRange(2,3),2.0) 
-                 + pow(spins[i]->getSquareForRange(4,5),2.0);
+    energyw += pow(spins[site]->getSquareForRange(2,3),2.0) 
+                 + pow(spins[site]->getSquareForRange(4,5),2.0);
   } //for loop
   
   energyg *= (g + 4.0*(lambda-1.0))/2.0;
