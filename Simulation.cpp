@@ -52,6 +52,10 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
   mag = new VecND(spinDim,0);
   calculateMagnetization();
   
+  inCluster = new bool[N];
+  for( int i=0; i<N; i++ )
+  { inCluster[i] = 0; }
+  
   cluster  = new vector<int>;
   buffer   = new vector<int>;
 }
@@ -71,6 +75,7 @@ Simulation::~Simulation()
   { delete mag; }
   mag = NULL;
   
+  delete[] inCluster;
   delete cluster;
   delete buffer;
 }
@@ -273,8 +278,20 @@ void Simulation::calculateMagnetization()
 /*************************************** clearCluster ***************************************/ 
 void Simulation::clearCluster()
 {
+  int site;
+  
   while( !cluster->empty() )
-  { cluster->pop_back(); }
+  { 
+    site = cluster->back();
+    inCluster[site]=0;
+    cluster->pop_back(); 
+  }
+  
+  for( int i=0; i<N; i++ )
+  {
+    if( inCluster[i]==1 )
+    { cout << "*** 1 ***" << endl; }
+  }
 }
 
 /**************************************** flipCluster *****************************************
@@ -463,7 +480,7 @@ double Simulation::getSFPhi()
 /**************************************** isInCluster ****************************************
 * This function checks whether or not spin at the passed site is in the cluster.
 *********************************************************************************************/  
-bool Simulation::isInCluster(int site)
+/*bool Simulation::isInCluster(int site)
 {
   int i;
   int clustSize = (int)cluster->size();
@@ -478,7 +495,7 @@ bool Simulation::isInCluster(int site)
   }  //closes while loop
   
   return found;
-}
+}*/
 
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
@@ -597,7 +614,8 @@ void Simulation::sweep()
   for( i=0; i<N1; i++ )
   { metropolisStep(); }
   
-  wolffStep();
+  if( lambda==1 )
+  { wolffStep(); }
   
   for( i=0; i<N2; i++ )
   { metropolisStep(); }
@@ -619,6 +637,7 @@ void Simulation::wolffStep()
   
   site = randomGen->randInt(N-1);
   //flipSpin(site, r);
+  inCluster[site] = 1;
   cluster->push_back(site);
   buffer->push_back(site);
   
@@ -635,9 +654,11 @@ void Simulation::wolffStep()
       if (exponent < 0 )
       {
         PAdd = 1.0 - exp(exponent);
-        if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
+        //if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
+        if( !( inCluster[ neighbours[site][i] ] ) && (randomGen->randDblExc() < PAdd) )
         { 
           //flipSpin(neighbours[site][i],r); 
+          inCluster[ neighbours[site][i] ] = 1;
           cluster->push_back( neighbours[site][i] );
           buffer ->push_back( neighbours[site][i] );
         }
@@ -651,7 +672,7 @@ void Simulation::wolffStep()
   
   //flip the cluster if it is accepted:
   onsiteEnergy_initial = getClusterOnSiteEnergy();
-  flipCluster(r);
+  flipCluster(r); //flip in order to calculate the final energy
   onsiteEnergy_final = getClusterOnSiteEnergy();
   onsiteEnergy_diff = onsiteEnergy_final - onsiteEnergy_initial;
   

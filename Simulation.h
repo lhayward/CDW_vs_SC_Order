@@ -31,7 +31,10 @@ private:
   int**                neighbours;
   const char*          outputFileName;
   MTRand*              randomGen;
-  vector<int>*         cluster;
+  vector<int>*         cluster; //vector storing the sites of spins in the cluster
+  bool*                inCluster;  //boolean array indicating whether or not each spin
+                                   //is in the cluster (redundant information to cluster vec,
+                                   //but stored for efficiency purposes)
   vector<int>*         buffer;
   vector<double>*      TList;
   
@@ -41,7 +44,7 @@ private:
   void   clearCluster();
   void   flipCluster(VecND* r);
   //void   flipSpin(int site, Vec4D* r);  //for original Wolff cluster algorithm
-  bool   isInCluster(int site);
+  //bool   isInCluster(int site);
   double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
   double getCPhi(int i, int j);
