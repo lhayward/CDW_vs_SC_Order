@@ -132,13 +132,29 @@ inline double MTRand::rand53()
 	return ( a * 67108864.0 + b ) * (1.0/9007199254740992.0);  // by Isaku Wada
 }
 
-inline double MTRand::randNorm( const double& mean, const double& variance )
+/*inline double MTRand::randNorm( const double& mean, const double& variance )
 {
 	// Return a real number from a normal (Gaussian) distribution with given
 	// mean and variance by Box-Muller method
 	double r = sqrt( -2.0 * log( 1.0-randDblExc()) ) * variance;
 	double phi = 2.0 * 3.14159265358979323846264338328 * randExc();
 	return mean + r * cos(phi);
+}*/
+
+inline double MTRand::randNorm( const double mean, const double stddev )
+{
+  // Return a real number from a normal (Gaussian) distribution with given
+  // mean and standard deviation by polar form of Box-Muller transformation
+  double x, y, r;
+  do
+  {
+    x = 2.0 * rand() - 1.0;
+    y = 2.0 * rand() - 1.0;
+    r = x * x + y * y;
+  }
+  while ( r >= 1.0 || r == 0.0 );
+  double s = sqrt( -2.0 * log(r) / r );
+  return mean + x * s * stddev;
 }
 
 inline MTRand::uint32 MTRand::randInt()
