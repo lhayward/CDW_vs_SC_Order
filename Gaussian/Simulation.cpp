@@ -84,15 +84,13 @@ void Simulation::runSim()
   unsigned int      TIndex;
   ofstream          outFile;
   string            spinFileName;
-  //double            currM;
   double            currPsiSq;
   VecND*            currn;
   VecND*            currnSq;
   double            aveE, aveESq;
   double            aveHelicityX, aveHelicityY;
-  double            aveM, aveMAbs, aveMSq, aveM4;
   double            avePsiSq, avePsi4;
-  //double            aveSF, aveSFPhi;
+  //double            aveSF;
   VecND* aven   = new VecND(spinDim,0);
   VecND* avenSq = new VecND(spinDim,0);
   
@@ -121,16 +119,11 @@ void Simulation::runSim()
       aveESq=0;
       aveHelicityX=0;
       aveHelicityY=0;
-      aveM=0;
-      aveMAbs=0;
-      aveMSq=0;
-      aveM4=0;
       avePsiSq=0;
       avePsi4=0;
       aven->clear();
       avenSq->clear();
       //aveSF = 0;
-      //aveSFPhi = 0;
   
       for( int j=0; j<measPerBin; j++ )
       { 
@@ -142,24 +135,17 @@ void Simulation::runSim()
         //magnetization we have been updating ourselves):
         calculateEnergy();
         calculateMagnetization();
-        calculateIsingOrder();
         
         currn = mag->getMultiple(1.0/N);
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
-        //currM = currnSq->v_[2] + currnSq->v_[3] - currnSq->v_[4] - currnSq->v_[5];
         currPsiSq = currnSq->v_[0] + currnSq->v_[1];
         
         aveE         += energy/N;
         aveESq       += pow( (energy/N), 2);
         //aveSF      += getSF();
-        //aveSFPhi   += getSFPhi();
         aveHelicityX += getHelicityModulus(0);
         aveHelicityY += getHelicityModulus(1);
-        aveM         += isingOrderParam;
-        aveMAbs      += abs(isingOrderParam);
-        aveMSq       += pow(isingOrderParam, 2);
-        aveM4        += pow(isingOrderParam, 4);
         avePsiSq     += currPsiSq;
         avePsi4      += pow(currPsiSq,2);
         aven->add(currn);
@@ -180,11 +166,6 @@ void Simulation::runSim()
       aveHelicityX = aveHelicityX/measPerBin;
       aveHelicityY = aveHelicityY/measPerBin;
       //aveSF      = aveSF/measPerBin;
-      //aveSFPhi   = aveSFPhi/measPerBin;
-      aveM         = aveM/measPerBin;
-      aveMAbs      = aveMAbs/measPerBin;
-      aveMSq       = aveMSq/measPerBin;
-      aveM4        = aveM4/measPerBin;
       avePsiSq     = avePsiSq/measPerBin;
       avePsi4      = avePsi4/measPerBin;
       aven->multiply(1.0/measPerBin);
@@ -192,7 +173,6 @@ void Simulation::runSim()
       
       outFile << L << '\t' << T << '\t' << (i+1) << '\t' << aveE << '\t' << aveESq << '\t'
               << aveHelicityX << '\t' << aveHelicityY << '\t'
-              << aveM << '\t' << aveMAbs << '\t' << aveMSq << '\t' << aveM4 << '\t'
               << avePsiSq << '\t' << avePsi4 << '\t';
       for( uint j=0; j<spinDim; j++ )
       { outFile << aven->v_[j] << '\t'; }
@@ -240,29 +220,6 @@ void Simulation::calculateEnergy()
   
   energy = J*(energy1 + energyLambda + energyg + energyw);
   */
-}
-
-/************************************ calculateIsingOrder ************************************/ 
-void Simulation::calculateIsingOrder()
-{
-  isingOrderParam=0;
-  VecND* orderParamComponents = new VecND(spinDim,0);
-  VecND* sqN;  //squared components of spins[i] for a given i
-  
-  for( int i=0; i<N; i++ )
-  { 
-    sqN = spins[i]->getSqComponents();
-    sqN->multiply(1.0/(N*N));
-    orderParamComponents->add(sqN); 
-    
-    if( sqN!=NULL )
-    { delete sqN; }
-    sqN=NULL;
-  }
-
-  isingOrderParam = orderParamComponents->v_[2] + orderParamComponents->v_[3]
-                    - orderParamComponents->v_[4] - orderParamComponents->v_[5];
-  delete orderParamComponents;
 }
 
 /********************************** calculateMagnetization **********************************/ 
@@ -366,12 +323,6 @@ double Simulation::getCorrelation(int i, int j)
   return spins[i]->dot(spins[j]);
 }
 
-/****************************************** getCPhi ******************************************/
-double Simulation::getCPhi(int i, int j)
-{
-  return spins[i]->dotForRange(spins[j],2,3);
-}
-
 /************************************* getHelicityModulus *************************************
 * Calculates and returns the helicity modulus for the desired lattice directions.
 * Note: dir=0 corresponds to the x-direction
@@ -459,23 +410,6 @@ double Simulation::getSF()
   SF /= N;
   
   return SF;
-}
-
-/****************************************** getSFPhi *****************************************/
-double Simulation::getSFPhi()
-{
-  double SFPhi = 0;
-  
-  ////sum over all pairs of spins (ensure j<i for no double counting):
-  //sum over all pairs of spins:
-  for( int i=0; i<N; i++ )
-  {
-    for( int j=0; j<N; j++ )
-    { SFPhi += getCPhi(i,j); }
-  }
-  SFPhi /= N;
-  
-  return SFPhi;
 }
 
 /**************************************** isInCluster ****************************************

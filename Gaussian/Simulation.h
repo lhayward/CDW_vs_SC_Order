@@ -22,7 +22,6 @@ public:
 private:
   double               J,sigmaBar,T;
   double               energy;  //total energy
-  double               isingOrderParam;
   VecND*               mag;     //total magnetization
   uint                 spinDim;
   int                  L,N;
@@ -47,10 +46,8 @@ private:
   ////bool   isInCluster(int site);
   //double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
-  double getCPhi(int i, int j);
   double getHelicityModulus(int dir);
   double getSF();
-  double getSFPhi();
   void   metropolisStep();
   //void   printCluster();
   void   printLattice();
