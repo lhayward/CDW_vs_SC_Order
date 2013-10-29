@@ -22,9 +22,9 @@
 typedef unsigned long ulong;
 
 void   printDoubleVec(vector<double>* vec);
-void   readInput  (const char* inFileName, double* J, double* lambda, double* g, double* w, 
-                   vector<double>* TList, int* LMin, int* LMax, int* LSteps, ulong* randomSeed, 
-                   int* numWarmUpSweeps,  int* sweepsPerMeas, int* measPerBin, int* numBins);
+void   readInput  (const char* inFileName, double* J, double* sigmaBar, vector<double>* TList, 
+                   int* LMin, int* LMax, int* LSteps, ulong* randomSeed, int* numWarmUpSweeps,  
+                   int* sweepsPerMeas, int* measPerBin, int* numBins);
 double readDouble    (ifstream* in, char delim);
 void   readDoubleList(vector<double>* list, ifstream* in, char delim, char startChar, char endChar);
 int    readInt       (ifstream* in, char delim); 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
   std::cout.precision(20);
   
   //variables to be read from file (values here are default values): 
-  double          J=2.0, lambda=1, g=0, w=0;
+  double          J=2.0, sigmaBar=0;
   int             LMax=20, LMin=10, LSteps=2;
   vector<double>* TList = new vector<double>;
   ulong           randomSeed = 12345678;
@@ -60,14 +60,12 @@ int main(int argc, char** argv)
   
   std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
   
-  readInput(inFileName.c_str(), &J, &lambda, &g, &w, TList, &LMin, &LMax, &LSteps, &randomSeed, 
+  readInput(inFileName.c_str(), &J, &sigmaBar, TList, &LMin, &LMax, &LSteps, &randomSeed, 
             &numWarmUpSweeps, &sweepsPerMeas, &measPerBin, &numBins);
   randomGen = new MTRand(randomSeed);
   
   std::cout << "                               J = " << J << std::endl
-            << "                          lambda = " << lambda << std::endl
-            << "                               g = " << g << std::endl
-            << "                               w = " << w << std::endl;
+            << "                       sigma bar = " << sigmaBar << std::endl;
   std::cout << "                Temperature List = ";
   printDoubleVec(TList);
   
@@ -91,7 +89,7 @@ int main(int argc, char** argv)
     { converter << "bins_L" << L << ".txt"; }
     outFileName = converter.str();
     std::cout << "OUTFILE = " << outFileName<< std::endl;
-    sim = new Simulation(J, lambda, g, w, TList, L, randomGen, numWarmUpSweeps, sweepsPerMeas, 
+    sim = new Simulation(J, sigmaBar, TList, L, randomGen, numWarmUpSweeps, sweepsPerMeas, 
                          measPerBin, numBins, outFileName.c_str());
     sec1 = time (NULL);
     sim->runSim();
@@ -125,9 +123,9 @@ void printDoubleVec(vector<double>* vec)
 
 
 /***************************************** readInput ****************************************/
-void readInput(const char* inFileName, double* J, double* lambda, double* g, double* w,
-               vector<double>* TList, int* LMin, int* LMax, int* LSteps, ulong* randomSeed, 
-               int* numWarmUpSweeps, int* sweepsPerMeas, int* measPerBin, int* numBins)
+void readInput(const char* inFileName, double* J, double* sigmaBar, vector<double>* TList, 
+               int* LMin, int* LMax, int* LSteps, ulong* randomSeed, int* numWarmUpSweeps, 
+               int* sweepsPerMeas, int* measPerBin, int* numBins)
 {
   const char EQUALS_CHAR = '=';
   const char LIST_START_CHAR = '[';
@@ -139,9 +137,7 @@ void readInput(const char* inFileName, double* J, double* lambda, double* g, dou
   if( inFile.is_open() )
   {
     *J               = readDouble (&inFile, EQUALS_CHAR);
-    *lambda          = readDouble (&inFile, EQUALS_CHAR);
-    *g               = readDouble (&inFile, EQUALS_CHAR);
-    *w               = readDouble (&inFile, EQUALS_CHAR);
+    *sigmaBar        = readDouble (&inFile, EQUALS_CHAR);
     readDoubleList(TList, &inFile, EQUALS_CHAR, LIST_START_CHAR, LIST_END_CHAR);
     *LMin            = readInt    (&inFile, EQUALS_CHAR);
     *LMax            = readInt    (&inFile, EQUALS_CHAR);
@@ -183,7 +179,8 @@ void readDoubleList(vector<double>* list, ifstream* in, char delim, char startCh
   currLine = currLine.substr(startIndex+1, (endIndex - startIndex - 1) );
   
   commaIndex = currLine.find_first_of(",");
-  while( commaIndex>=0 && commaIndex<currLine.size() )
+  //while( commaIndex>=0 && commaIndex<currLine.size() )
+  while( commaIndex<currLine.size() )
   {
     list->push_back( strtod( (currLine.substr(0, commaIndex)).c_str(), NULL) );
     currLine = currLine.substr(commaIndex+1);

@@ -20,12 +20,12 @@ public:
   typedef unsigned int  uint;
   
 private:
-  double               J,lambda,g,w,T;
+  double               J,sigmaBar,T;
   double               energy;  //total energy
   double               isingOrderParam;
   VecND*               mag;     //total magnetization
   uint                 spinDim;
-  int                  L,N,numTSteps;
+  int                  L,N;
   int                  numWarmUpSweeps, sweepsPerMeas, measPerBin, numBins;
   VecND**              spins;
   int**                neighbours;
@@ -41,11 +41,11 @@ private:
   void   calculateEnergy();
   void   calculateIsingOrder();
   void   calculateMagnetization();
-  void   clearCluster();
-  void   flipCluster(VecND* r);
-  //void   flipSpin(int site, Vec4D* r);  //for original Wolff cluster algorithm
-  //bool   isInCluster(int site);
-  double getClusterOnSiteEnergy();
+  //void   clearCluster();
+  //void   flipCluster(VecND* r);
+  ////void   flipSpin(int site, Vec4D* r);  //for original Wolff cluster algorithm
+  ////bool   isInCluster(int site);
+  //double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
   double getCPhi(int i, int j);
   double getHelicityModulus(int dir);
@@ -57,13 +57,13 @@ private:
   void   randomizeLattice();
   void   setUpNeighbours();
   void   sweep();
-  void   wolffStep();
+  //void   wolffStep();
   
   //methods for generating a random point on an N-dimensional unit hypersphere (proposed by 
   //Marsaglia for N=4):
   //VecND* getRandomVecND_3();
 public:
-  Simulation(double J, double lambda, double g, double w, vector<double>* TList, int L,
+  Simulation(double J, double sigmaBar, vector<double>* TList, int L,
              MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, int measPerBin, 
              int numBins, const char* outputFileName);
   virtual ~Simulation();

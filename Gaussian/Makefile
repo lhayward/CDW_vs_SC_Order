@@ -1,6 +1,6 @@
 CC = c++ -Wall -funroll-loops #-pg #-xHOST # -O3
 
-PROG = o6
+PROG = gaussian
 HDRS = MersenneTwister.h Simulation.h VecND.h
 SRCS = Main.cpp Simulation.cpp VecND.cpp
 OBJS = Main.o Simulation.o VecND.o

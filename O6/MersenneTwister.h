@@ -72,7 +72,8 @@ public:
 	double rand53();  // real number in [0,1)
 	
 	// Access to nonuniform random number distributions
-	double randNorm( const double& mean = 0.0, const double& variance = 0.0 );
+	//double randNorm( const double& mean = 0.0, const double& variance = 0.0 );
+	double randNorm( const double& mean = 0.0, const double& stddev = 0.0 );
 	
 	// Re-seeding functions with same behavior as initializers
 	void seed( const uint32 oneSeed );
@@ -141,7 +142,7 @@ inline double MTRand::rand53()
 	return mean + r * cos(phi);
 }*/
 
-inline double MTRand::randNorm( const double mean, const double stddev )
+inline double MTRand::randNorm( const double& mean, const double& stddev )
 {
   // Return a real number from a normal (Gaussian) distribution with given
   // mean and standard deviation by polar form of Box-Muller transformation

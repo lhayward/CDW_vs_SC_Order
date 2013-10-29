@@ -18,15 +18,13 @@
 //using namespace std;
 
 /********************************* Simulation (constructor) *********************************/ 
-Simulation::Simulation(double J, double lambda, double g, double w, vector<double>* TList,
-                       int L, MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, 
+Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L, 
+                       MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, 
                        int measPerBin, int numBins, const char* outputFileName)
 {
-  spinDim               = 6;
+  spinDim               = 2;
   this->J               = J;
-  this->lambda          = lambda;
-  this->g               = g;
-  this->w               = w;
+  this->sigmaBar        = sigmaBar;
   this->TList           = TList;
   this->L               = L;
   this->N               = L*L;
@@ -212,6 +210,8 @@ void Simulation::runSim()
 /************************************** calculateEnergy *************************************/  
 void Simulation::calculateEnergy()
 {
+  energy=0;
+  /*
   int    i;
   energy=0;
   double energy1=0;
@@ -239,6 +239,7 @@ void Simulation::calculateEnergy()
   energyw *= w/2.0;
   
   energy = J*(energy1 + energyLambda + energyg + energyw);
+  */
 }
 
 /************************************ calculateIsingOrder ************************************/ 
@@ -276,7 +277,7 @@ void Simulation::calculateMagnetization()
 }
 
 /*************************************** clearCluster ***************************************/ 
-void Simulation::clearCluster()
+/*void Simulation::clearCluster()
 {
   int site;
   
@@ -292,18 +293,18 @@ void Simulation::clearCluster()
     if( inCluster[i]==1 )
     { cout << "*** 1 ***" << endl; }
   }
-}
+}*/
 
 /**************************************** flipCluster *****************************************
 * This function flips all spins in the cluster by using the passed vector r.
 **********************************************************************************************/
-void Simulation::flipCluster(VecND* r)
+/*void Simulation::flipCluster(VecND* r)
 {
   int clustSize = (int)cluster->size();
   
   for( int i=0; i<clustSize; i++ )
   { spins[cluster->at(i)]->reflectAndNormalize(r); } //for loop
-}
+}*/
 
 /***************************************** flipSpin ******************************************
 * The function reflects the spin at the passed site about the hyperplane orthogonal to the 
@@ -339,7 +340,7 @@ void Simulation::flipCluster(VecND* r)
 * This function calculates the onsite (non-interacting) part of the energy corresponding to 
 * the spins in the cluster.
 **********************************************************************************************/
-double Simulation::getClusterOnSiteEnergy()
+/*double Simulation::getClusterOnSiteEnergy()
 {
   int clustSize = (int)cluster->size();
   int site;
@@ -357,7 +358,7 @@ double Simulation::getClusterOnSiteEnergy()
   energyg *= (g + 4.0*(lambda-1.0))/2.0;
   energyw *= w/2.0;
   return J*(energyg + energyw);
-}
+}*/
 
 /************************************** getCorrelation ***************************************/
 double Simulation::getCorrelation(int i, int j)
@@ -512,12 +513,14 @@ void Simulation::metropolisStep()
   for( int i=0; i<numNeighbours; i++ )
   { nnSum->add(spins[neighbours[site][i]]); }
   
-  deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
+  /*deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
                - lambda*(nnSum->dotForRange(sNew,2,spinDim-1) - nnSum->dotForRange(spins[site],2,spinDim-1)) 
                + (g + 4*(lambda-1.0))/2.0*(sNew->getSquareForRange(2,spinDim-1) 
                                           - spins[site]->getSquareForRange(2,spinDim-1)) 
                + w/2.0*(pow(sNew->getSquareForRange(2,3),2.0) + pow(sNew->getSquareForRange(4,5),2.0) 
                         - pow(spins[site]->getSquareForRange(2,3),2.0) - pow(spins[site]->getSquareForRange(4,5),2.0)) );
+  */
+  deltaE=0;
   
   if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
   {
@@ -607,6 +610,8 @@ void Simulation::setUpNeighbours()
 /******************************************* sweep ******************************************/  
 void Simulation::sweep()
 {
+  for( int i=0; i<N; i++ )
+  { metropolisStep(); }
   /*int i;
   int N1 = N/2; //number of Metropolis steps before Wolff step
   int N2 = N - N1;  //number of Metropolis steps after Wolff step
@@ -624,7 +629,7 @@ void Simulation::sweep()
 }
 
 /***************************************** wolffStep ****************************************/
-void Simulation::wolffStep()
+/*void Simulation::wolffStep()
 {
   int numNeighbours = 4;
   int i, site;
@@ -695,4 +700,4 @@ void Simulation::wolffStep()
   if(r!=NULL)
   { delete r; }
   r = NULL;
-}
+}*/
