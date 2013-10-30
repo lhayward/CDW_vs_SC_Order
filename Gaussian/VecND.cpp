@@ -102,6 +102,19 @@ VecND::VecND(uint N, MTRand* randomGen)
   { v_[i] = v_[i]/S; }
 }
 
+/************************************ VecND (constructor) *************************************
+* This is a method for generating a random vector (not normalized to lie on the N-dimensional
+* unit hypersphere) by using a normal distribution with the given mean and error.
+**********************************************************************************************/
+VecND::VecND(uint N, MTRand* randomGen, double mean, double stddev)
+{
+  N_ = N;
+  v_ = new double[N];
+  
+  for( uint i=0; i<N_; i++ )
+  { v_[i] = randomGen->randNorm(mean,stddev); }
+}
+
 /************************************ ~VecND (destructor) ***********************************/ 
 VecND::~VecND()
 {

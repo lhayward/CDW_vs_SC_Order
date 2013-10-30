@@ -26,6 +26,7 @@ class VecND
     VecND(uint N, double val);
     VecND(uint N, int val);
     VecND(uint N, MTRand* randomGen);
+    VecND(uint N, MTRand* randomGen, double mean, double stddev);
     virtual ~VecND();
   
     void   add(VecND* vec2);

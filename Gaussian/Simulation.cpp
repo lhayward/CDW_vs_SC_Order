@@ -27,6 +27,7 @@ Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L,
   this->J               = J;
   this->sigmaBar        = sigmaBar;
   this->TList           = TList;
+  this->T               = TList->at(0);
   this->L               = L;
   this->N               = L*L;
   this->randomGen       = randomGen;
@@ -37,12 +38,9 @@ Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L,
   this->outputFileName  = outputFileName;
   
   spins = new VecND*[N+1];
-  //for( int i=0; i<N; i++ )
-  //{ spins[i] = getRandomVecND_1(); }
   spins[N] = new VecND(spinDim,0);  //The (N+1)st spin is an effective neighbour for spins
                                     //on the lattice boundary. The value of this spin is zero
                                     //so that it does not affect values of observables.
-  randomizeLattice();
   
   neighbours = new int*[N];
   for( int i=0; i<N; i++ )
@@ -52,6 +50,8 @@ Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L,
   { crossProds[i] = new int[maxZ]; }
   coordNums = new int[N];
   setUpNeighbours();
+  
+  randomizeLattice();
   
   calculateEnergy();
   mag = new VecND(spinDim,0);
@@ -97,7 +97,6 @@ void Simulation::runSim()
 {
   unsigned int      TIndex;
   ofstream          outFile;
-  string            spinFileName;
   double            currPsiSq;
   VecND*            currn;
   VecND*            currnSq;
@@ -205,35 +204,19 @@ void Simulation::runSim()
 void Simulation::calculateEnergy()
 {
   energy=0;
-  /*
-  int    i;
-  energy=0;
-  double energy1=0;
-  double energyLambda=0;
-  double energyg=0;
-  double energyw=0;
+  double energyOnSite = 0;
+  double energyNeigh = 0;
   
-  for( i=0; i<N; i++ )
-  { energy1 += spins[i]->dotForRange(spins[neighbours[i][0]],0,1) 
-               + spins[i]->dotForRange(spins[neighbours[i][2]],0,1); }
-  energy1 *= -1;
+  for( int i=0; i<N; i++ )
+  { energyOnSite += (coordNums[i] + sigmaBar)*spins[i]->getSquare(); }
+  energyOnSite *= 1.0/2.0;
   
-  for( i=0; i<N; i++ )
-  { energyLambda += spins[i]->dotForRange(spins[neighbours[i][0]],2,spinDim-1) 
-                    + spins[i]->dotForRange(spins[neighbours[i][2]],2,spinDim-1); }
-  energyLambda *= -1*lambda;
+  for( int i=0; i<N; i++ )
+  { energyNeigh += spins[i]->dot( spins[neighbours[i][0]] )
+                   + spins[i]->dot( spins[neighbours[i][2]] ); }
+  energyNeigh *= -1;
   
-  for( i=0; i<N; i++ )
-  { energyg += spins[i]->getSquareForRange(2,spinDim-1); }
-  energyg *= (g + 4.0*(lambda-1.0))/2.0;
-  
-  for( i=0; i<N; i++ )
-  { energyw += pow(spins[i]->getSquareForRange(2,3),2.0) 
-               + pow(spins[i]->getSquareForRange(4,5),2.0); }
-  energyw *= w/2.0;
-  
-  energy = J*(energy1 + energyLambda + energyg + energyw);
-  */
+  energy = J*(energyOnSite + energyNeigh);
 }
 
 /********************************** calculateMagnetization **********************************/ 
@@ -449,26 +432,27 @@ double Simulation::getSF()
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
 {
-  int numNeighbours = 4;
+  //int numNeighbours = 4;
   int site;
   double deltaE;
-  VecND* sNew = new VecND(spinDim, randomGen);
+  double mean = 0;
+  double stddev;
+  VecND* sNew; // = new VecND(spinDim, randomGen);
   VecND* nnSum = new VecND(spinDim,0);
   
+  //Generate the new spin using a Gaussian distribution based on the on-site term in the 
+  //Hamiltonian:
   site = randomGen->randInt(N-1);
+  stddev = sqrt( T/(J*(coordNums[site] + sigmaBar)) );;
+  sNew = new VecND( spinDim, randomGen, mean, stddev );
   
   //loop to calculate the nearest neighbour sum:
-  for( int i=0; i<numNeighbours; i++ )
+  for( int i=0; i<maxZ; i++ )
   { nnSum->add(spins[neighbours[site][i]]); }
   
-  /*deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
-               - lambda*(nnSum->dotForRange(sNew,2,spinDim-1) - nnSum->dotForRange(spins[site],2,spinDim-1)) 
-               + (g + 4*(lambda-1.0))/2.0*(sNew->getSquareForRange(2,spinDim-1) 
-                                          - spins[site]->getSquareForRange(2,spinDim-1)) 
-               + w/2.0*(pow(sNew->getSquareForRange(2,3),2.0) + pow(sNew->getSquareForRange(4,5),2.0) 
-                        - pow(spins[site]->getSquareForRange(2,3),2.0) - pow(spins[site]->getSquareForRange(4,5),2.0)) );
-  */
-  deltaE=0;
+  //The on-site contribution is taken care of by the normal distribution used to generate the
+  //random new spin. Therefore, delta(E) is from nearest neighbour interactions only:
+  deltaE = -1*J*( nnSum->dot(sNew) - nnSum->dot(spins[site]) );
   
   if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
   {
@@ -510,6 +494,27 @@ void Simulation::metropolisStep()
   std::cout << std::endl;
 }*/
 
+void Simulation::printNeighbours()
+{
+  for( int i=0; i<N; i++ )
+  {
+    std::cout << "Spin " << i << ": " << std::endl;
+    std::cout << "  Co-ordination Number = " << coordNums[i] << std::endl;
+    
+    std::cout << "  Neighbours: [  ";
+    for( int j=0; j<maxZ; j++ )
+    { std::cout << neighbours[i][j] << "  "; }
+    std::cout << "]" << std::endl;
+    
+    std::cout << "  Cross Products: [  ";
+    for( int j=0; j<maxZ; j++ )
+    { std::cout << crossProds[i][j] << "  "; }
+    std::cout << "]" << std::endl;
+    
+  }
+  std::cout << std::endl;
+}
+
 /**************************************** printLattice ***************************************/
 void Simulation::printLattice()
 {
@@ -524,8 +529,15 @@ void Simulation::printLattice()
 /************************************** randomizeLattice *************************************/
 void Simulation::randomizeLattice()
 {
+  double mean;
+  double stddev;
+  
   for( int i=0; i<N; i++ )
-  { spins[i] = new VecND(spinDim,randomGen); }
+  {
+    mean = 0;
+    stddev = sqrt( T/(J*(coordNums[i] + sigmaBar)) );
+    spins[i] = new VecND(spinDim,randomGen, mean, stddev); 
+  }
 }
 
 /************************************** setUpNeighbours **************************************
@@ -560,8 +572,8 @@ void Simulation::setUpNeighbours()
     //if spin i is on the right-hand boundary:
     else
     {
-      neighbours[i][0] = N+1; //neighbour is the extra "spin" at the end of the spin array
-                              //(with value 0)
+      neighbours[i][0] = N; //neighbour is the extra "spin" at the end of the spin array
+                            //(with value 0)
       crossProds[i][0] = 0;
     }
     
@@ -580,8 +592,8 @@ void Simulation::setUpNeighbours()
     //if spin i is on the left-hand boundary:
     else
     {
-      neighbours[i][1] = N+1; //neighbour is the extra "spin" at the end of the spin array
-                              //(with value 0)
+      neighbours[i][1] = N; //neighbour is the extra "spin" at the end of the spin array
+                            //(with value 0)
       crossProds[i][1] = 0;
     }
     
@@ -600,8 +612,8 @@ void Simulation::setUpNeighbours()
     //if spin i is on the top boundary:
     else
     {
-      neighbours[i][2] = N+1; //neighbour is the extra "spin" at the end of the spin array
-                              //(with value 0)
+      neighbours[i][2] = N; //neighbour is the extra "spin" at the end of the spin array
+                            //(with value 0)
       crossProds[i][2] = 0;
     }
     
@@ -620,8 +632,8 @@ void Simulation::setUpNeighbours()
     //if spin i is on the bottom boundary:
     else
     {
-      neighbours[i][3] = N+1; //neighbour is the extra "spin" at the end of the spin array
-                              //(with value 0)
+      neighbours[i][3] = N; //neighbour is the extra "spin" at the end of the spin array
+                            //(with value 0)
       crossProds[i][3] = 0;
     }
     
@@ -630,9 +642,7 @@ void Simulation::setUpNeighbours()
 
 /******************************************* sweep ******************************************/  
 void Simulation::sweep()
-{
-  for( int i=0; i<N; i++ )
-  { metropolisStep(); }
+{ 
   /*int i;
   int N1 = N/2; //number of Metropolis steps before Wolff step
   int N2 = N - N1;  //number of Metropolis steps after Wolff step
@@ -646,7 +656,8 @@ void Simulation::sweep()
   for( i=0; i<N2; i++ )
   { metropolisStep(); }*/
   
-  
+  for( int i=0; i<N; i++ )
+  { metropolisStep(); }
 }
 
 /***************************************** wolffStep ****************************************/

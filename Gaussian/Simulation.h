@@ -56,6 +56,7 @@ private:
   void   metropolisStep();
   //void   printCluster();
   void   printLattice();
+  void   printNeighbours();
   void   randomizeLattice();
   void   setUpNeighbours();
   void   sweep();
