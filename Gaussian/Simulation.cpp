@@ -198,8 +198,6 @@ void Simulation::runSim()
       outFile << std::endl;
       
       std::cout << (i+1) << " Bins Complete" << std::endl;
-      std::cout << "Energy = " << aveE << std::endl;
-      std::cout << "Diamag. = " << aveDiamag << '\n' << std::endl;
     } //i (bins)
   }  //closes T loop
   
@@ -382,7 +380,7 @@ double Simulation::getHelicityModulus(int dir)
       sum1 += spins[i]->dotForRange(neigh,0,1);
       sum2 += spins[i]->v_[0]*neigh->v_[1] - spins[i]->v_[1]*neigh->v_[0];
      }
-     helicityMod = sum1/(1.0*N) - J/(T*N)*pow(sum2,2); 
+     helicityMod = sum1/(1.0*N) - J/(1.0*T*N)*pow(sum2,2); 
   } //end if
   
   return helicityMod;
@@ -476,7 +474,7 @@ void Simulation::metropolisStep()
   //Generate the new spin using a Gaussian distribution based on the on-site term in the 
   //Hamiltonian:
   site = randomGen->randInt(N-1);
-  stddev = sqrt( T/(J*(coordNums[site] + sigmaBar)) );;
+  stddev = sqrt( T/(J*1.0*(coordNums[site] + sigmaBar)) );;
   sNew = new VecND( spinDim, randomGen, mean, stddev );
   
   //loop to calculate the nearest neighbour sum:
@@ -568,7 +566,7 @@ void Simulation::randomizeLattice()
   for( int i=0; i<N; i++ )
   {
     mean = 0;
-    stddev = sqrt( T/(J*(coordNums[i] + sigmaBar)) );
+    stddev = sqrt( T/(J*1.0*(coordNums[i] + sigmaBar)) );
     spins[i] = new VecND(spinDim,randomGen, mean, stddev); 
   }
 }
