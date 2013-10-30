@@ -51,6 +51,7 @@ private:
   ////bool   isInCluster(int site);
   //double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
+  double getDiamag();
   double getHelicityModulus(int dir);
   double getSF();
   void   metropolisStep();

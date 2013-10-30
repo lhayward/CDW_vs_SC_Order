@@ -101,6 +101,7 @@ void Simulation::runSim()
   VecND*            currn;
   VecND*            currnSq;
   double            aveE, aveESq;
+  double            aveDiamag;
   double            aveHelicityX, aveHelicityY;
   double            avePsiSq, avePsi4;
   //double            aveSF;
@@ -130,6 +131,7 @@ void Simulation::runSim()
     {
       aveE=0;
       aveESq=0;
+      aveDiamag=0;
       aveHelicityX=0;
       aveHelicityY=0;
       avePsiSq=0;
@@ -157,6 +159,7 @@ void Simulation::runSim()
         aveE         += energy/N;
         aveESq       += pow( (energy/N), 2);
         //aveSF      += getSF();
+        aveDiamag    += getDiamag()/(1.0*T);
         aveHelicityX += getHelicityModulus(0);
         aveHelicityY += getHelicityModulus(1);
         avePsiSq     += currPsiSq;
@@ -176,6 +179,7 @@ void Simulation::runSim()
       //calculate average for the bin:
       aveE         = aveE/measPerBin;
       aveESq       = aveESq/measPerBin;
+      aveDiamag    = aveDiamag/measPerBin;
       aveHelicityX = aveHelicityX/measPerBin;
       aveHelicityY = aveHelicityY/measPerBin;
       //aveSF      = aveSF/measPerBin;
@@ -185,7 +189,7 @@ void Simulation::runSim()
       avenSq->multiply(1.0/measPerBin);
       
       outFile << L << '\t' << T << '\t' << (i+1) << '\t' << aveE << '\t' << aveESq << '\t'
-              << aveHelicityX << '\t' << aveHelicityY << '\t'
+              << aveDiamag << '\t' << aveHelicityX << '\t' << aveHelicityY << '\t'
               << avePsiSq << '\t' << avePsi4 << '\t';
       for( uint j=0; j<spinDim; j++ )
       { outFile << aven->v_[j] << '\t'; }
@@ -193,7 +197,9 @@ void Simulation::runSim()
       { outFile << avenSq->v_[j] << '\t'; }
       outFile << std::endl;
       
-      std::cout << (i+1) << " Bins Complete" << std::endl; 
+      std::cout << (i+1) << " Bins Complete" << std::endl;
+      std::cout << "Energy = " << aveE << std::endl;
+      std::cout << "Diamag. = " << aveDiamag << '\n' << std::endl;
     } //i (bins)
   }  //closes T loop
   
@@ -314,6 +320,34 @@ void Simulation::calculateMagnetization()
   return J*(energyg + energyw);
 }*/
 
+/***************************************** getDiamag *****************************************/
+double Simulation::getDiamag()
+{
+  double diamag = 0;  // M/B
+  double term1 = 0; //First term in the expression for M/B
+  double term2 = 0; //Second term in the expression for M/B
+  
+  for( int i=0; i<N; i++ )
+  {
+    //sum over indices corresponding to a=+\hat{x} and a=+\hat{y}:
+    for( int j=0; j<maxZ; j=j+2 )
+    { term1 += crossProds[i][j]*crossProds[i][j]*spins[i]->dot( spins[ neighbours[i][j] ] ); }
+  }
+  term1 *= -1*J/(16.0*N);
+  
+  for( int i=0; i<N; i++ )
+  {
+    //sum over indices corresponding to a=+\hat{x} and a=+\hat{y}:
+    for( int j=0; j<maxZ; j=j+2 )
+    { term2 += crossProds[i][j]*( spins[i]->v_[0]*spins[neighbours[i][j]]->v_[1] ) 
+                                  - spins[i]->v_[1]*spins[neighbours[i][j]]->v_[0]; }
+  }
+  term2 = J*J*term2*term2/(16.0*T*N);
+  
+  diamag = term1 + term2;
+  return diamag;
+}
+
 /************************************** getCorrelation ***************************************/
 double Simulation::getCorrelation(int i, int j)
 {
@@ -432,7 +466,6 @@ double Simulation::getSF()
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
 {
-  //int numNeighbours = 4;
   int site;
   double deltaE;
   double mean = 0;
