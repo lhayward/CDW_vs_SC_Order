@@ -166,7 +166,8 @@ VecND* VecND::getMultiple(double c)
 VecND* VecND::getReflection(VecND* r)
 {
   VecND* result = new VecND(N_, this);
-  result->reflectAndNormalize(r);
+  //result->reflectAndNormalize(r);
+  result->reflect(r);
   return result;
 }
 
@@ -233,6 +234,15 @@ void VecND::print()
   for( uint i=0; i<(N_-1); i++ )
   { cout << v_[i] << " , "; }
   cout << v_[N_-1] << " ]" << endl;
+}
+
+/****************************************** reflect ******************************************/
+void VecND::reflect(VecND* r)
+{
+  double dotProd = dot(r); 
+  
+  for( uint i=0; i<N_; i++ )
+  { v_[i] = v_[i] - 2*dotProd*r->v_[i]; }
 }
 
 /************************************ reflectAndNormalize ************************************/

@@ -23,6 +23,7 @@ Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L,
                        int measPerBin, int numBins, const char* outputFileName)
 {
   spinDim               = 2;
+  maxZ                  = 4;
   this->J               = J;
   this->sigmaBar        = sigmaBar;
   this->TList           = TList;
@@ -35,33 +36,39 @@ Simulation::Simulation(double J, double sigmaBar, vector<double>* TList, int L,
   this->numBins         = numBins;
   this->outputFileName  = outputFileName;
   
-  spins = new VecND*[N];
+  spins = new VecND*[N+1];
   //for( int i=0; i<N; i++ )
   //{ spins[i] = getRandomVecND_1(); }
+  spins[N] = new VecND(spinDim,0);  //The (N+1)st spin is an effective neighbour for spins
+                                    //on the lattice boundary. The value of this spin is zero
+                                    //so that it does not affect values of observables.
   randomizeLattice();
   
   neighbours = new int*[N];
   for( int i=0; i<N; i++ )
-  { neighbours[i] = new int[4]; }
-  
+  { neighbours[i] = new int[maxZ]; }
+  crossProds = new int*[N];
+  for( int i=0; i<N; i++ )
+  { crossProds[i] = new int[maxZ]; }
+  coordNums = new int[N];
   setUpNeighbours();
   
   calculateEnergy();
   mag = new VecND(spinDim,0);
   calculateMagnetization();
   
-  inCluster = new bool[N];
+  /*inCluster = new bool[N];
   for( int i=0; i<N; i++ )
   { inCluster[i] = 0; }
   
   cluster  = new vector<int>;
-  buffer   = new vector<int>;
+  buffer   = new vector<int>;*/
 }
 
 /********************************* ~Simulation (destructor) *********************************/
 Simulation::~Simulation()
 {
-  for( int i=0; i<N; i++ )
+  for( int i=0; i<(N+1); i++ )
   { delete spins[i]; }
   delete[] spins;
   
@@ -69,13 +76,20 @@ Simulation::~Simulation()
   { delete[] neighbours[i]; }
   delete[] neighbours; 
   
+  for(int i=0; i<N; i++)
+  { delete[] crossProds[i]; }
+  delete[] crossProds; 
+  
+  if( coordNums!=NULL )
+  { delete[] coordNums; }
+  
   if(mag!=NULL)
   { delete mag; }
   mag = NULL;
   
-  delete[] inCluster;
+  /*delete[] inCluster;
   delete cluster;
-  delete buffer;
+  delete buffer;*/
 }
 
 /****************************************** runSim ******************************************/ 
@@ -515,29 +529,102 @@ void Simulation::randomizeLattice()
 }
 
 /************************************** setUpNeighbours **************************************
-* This functions sets up the "neighbours" array for a square lattice with periodic boundary
-* conditions. 
+* This functions sets up the "neighbours" and "coordNums" arrays for a square lattice with 
+* open boundary conditions. 
 *********************************************************************************************/
 void Simulation::setUpNeighbours()
 {
-  int i,x,y;
+  int ix,  iy;  //coordinates of spin i
+  int inx, iny; //coordinates of spin i's neighbour
   
-  //loop to assign the neighbours (with periodic boundary conditions):
-  for( i=0; i<N; i++ )
+  //loop to assign the neighbours (with open boundary conditions):
+  for( int i=0; i<N; i++ )
   {
-    //assign the x-direction neighbours:
-    x = i+1;
-    if( (i+1)%L==0 )
-    { x = x - L; }
-    neighbours[i][0] = x; //+x neighbour of i is x
-    neighbours[x][1] = i; //-x neighbour of x is i
+    coordNums[i] = 0;
     
-    //assign the y-direction neighbours:
-    y = i+L;
-        if( y%(L*L) < L )
-        { y = y - L*L; }
-    neighbours[i][2] = y;  //+y neighbour of i is y
-    neighbours[y][3] = i;  //-y neighbour of y is i  
+    ix = i%L;
+    iy = (i-ix)/L;
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the right (+x direction):
+    inx=ix+1;
+    iny=iy;
+    //if spin i is not on the right-hand boundary:
+    if( inx < L )
+    {
+      coordNums[i]++;
+      neighbours[i][0] = iny*L + inx;
+      crossProds[i][0] = -1*(2*iy - L + 1);
+      
+    }
+    //if spin i is on the right-hand boundary:
+    else
+    {
+      neighbours[i][0] = N+1; //neighbour is the extra "spin" at the end of the spin array
+                              //(with value 0)
+      crossProds[i][0] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the left (-x direction):
+    inx=ix-1;
+    iny=iy;
+    //if spin i is not on the left-hand boundary:
+    if( inx >= 0 )
+    {
+      coordNums[i]++;
+      neighbours[i][1] = iny*L + inx;
+      crossProds[i][1] = 2*iy - L + 1;
+      
+    }
+    //if spin i is on the left-hand boundary:
+    else
+    {
+      neighbours[i][1] = N+1; //neighbour is the extra "spin" at the end of the spin array
+                              //(with value 0)
+      crossProds[i][1] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the top (+y direction):
+    inx=ix;
+    iny=iy+1;
+    //if spin i is not on the top boundary:
+    if( iny < L)
+    {
+      coordNums[i]++;
+      neighbours[i][2] = iny*L + inx;
+      crossProds[i][2] = 2*ix - L + 1;
+      
+    }
+    //if spin i is on the top boundary:
+    else
+    {
+      neighbours[i][2] = N+1; //neighbour is the extra "spin" at the end of the spin array
+                              //(with value 0)
+      crossProds[i][2] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the bottom (-y direction):
+    inx=ix;
+    iny=iy-1;
+    //if spin i is not on the bottom boundary:
+    if( iny >= 0 )
+    {
+      coordNums[i]++;
+      neighbours[i][3] = iny*L + inx;
+      crossProds[i][3] = -1*(2*ix - L + 1);
+      
+    }
+    //if spin i is on the bottom boundary:
+    else
+    {
+      neighbours[i][3] = N+1; //neighbour is the extra "spin" at the end of the spin array
+                              //(with value 0)
+      crossProds[i][3] = 0;
+    }
+    
   }  //closes for loop
 }
 

@@ -40,6 +40,7 @@ class VecND
     void   multiply(double c);
     void   normalize();
     void   print();
+    void   reflect(VecND* r);
     void   reflectAndNormalize(VecND* r);
     void   subtract(VecND* vec2);
 };

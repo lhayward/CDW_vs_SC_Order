@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     sim = new Simulation(J, sigmaBar, TList, L, randomGen, numWarmUpSweeps, sweepsPerMeas, 
                          measPerBin, numBins, outFileName.c_str());
     sec1 = time (NULL);
-    sim->runSim();
+    //sim->runSim();
     sec2 = time(NULL);
     std::cout << "Time for L = " << L << ": " << (sec2 - sec1) << " seconds" << std::endl;
     

@@ -25,16 +25,21 @@ private:
   VecND*               mag;     //total magnetization
   uint                 spinDim;
   int                  L,N;
+  int                  maxZ;  //max. coordinate number
   int                  numWarmUpSweeps, sweepsPerMeas, measPerBin, numBins;
   VecND**              spins;
+  int*                 coordNums;
+  int**                crossProds;  //2D array, where crossProds[i][a] stores TWICE the cross 
+                                    //product of r_i with bond vector "a" ( a=0 => \hat{x},
+                                    //a=1 => -\hat{x}, a=2 => \hat{y}, a=3 => -\hat{y} )
   int**                neighbours;
   const char*          outputFileName;
   MTRand*              randomGen;
-  vector<int>*         cluster; //vector storing the sites of spins in the cluster
-  bool*                inCluster;  //boolean array indicating whether or not each spin
+  //vector<int>*         cluster; //vector storing the sites of spins in the cluster
+  //bool*                inCluster;  //boolean array indicating whether or not each spin
                                    //is in the cluster (redundant information to cluster vec,
                                    //but stored for efficiency purposes)
-  vector<int>*         buffer;
+  //vector<int>*         buffer;
   vector<double>*      TList;
   
   void   calculateEnergy();
