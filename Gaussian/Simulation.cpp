@@ -318,6 +318,12 @@ void Simulation::calculateMagnetization()
   return J*(energyg + energyw);
 }*/
 
+/************************************** getCorrelation ***************************************/
+double Simulation::getCorrelation(int i, int j)
+{
+  return spins[i]->dot(spins[j]);
+}
+
 /***************************************** getDiamag *****************************************/
 double Simulation::getDiamag()
 {
@@ -344,12 +350,6 @@ double Simulation::getDiamag()
   
   diamag = term1 + term2;
   return diamag;
-}
-
-/************************************** getCorrelation ***************************************/
-double Simulation::getCorrelation(int i, int j)
-{
-  return spins[i]->dot(spins[j]);
 }
 
 /************************************* getHelicityModulus *************************************
@@ -513,6 +513,58 @@ void Simulation::metropolisStep()
   nnSum = NULL;
 }
 
+/************************************* metropolisStep_2 ************************************/  
+void Simulation::metropolisStep_2()
+{
+  int site;
+  double deltaE;
+  double mean = 0;
+  double stddev;
+  VecND* sNew; // = new VecND(spinDim, randomGen);
+  VecND* nnSum = new VecND(spinDim,0);
+  
+  //Generate the new spin using a Gaussian distribution based on the on-site term in the 
+  //Hamiltonian:
+  site = randomGen->randInt(N-1);
+  stddev = sqrt( T/(J*1.0*(coordNums[site] + sigmaBar)) );;
+  sNew = new VecND( spinDim, randomGen, mean, stddev );
+  
+  //loop to calculate the nearest neighbour sum:
+  for( int i=0; i<maxZ; i++ )
+  { nnSum->add(spins[neighbours[site][i]]); }
+  
+  //The on-site contribution is taken care of by the normal distribution used to generate the
+  //random new spin. Therefore, delta(E) is from nearest neighbour interactions only:
+  deltaE = -1*J*( nnSum->dot(sNew) - nnSum->dot(spins[site]) );
+  
+  if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
+  {
+    //Calculate energy and mag before writing to file, not now:
+    //energy += deltaE;
+    //mag->subtract(spins[site]);
+    //mag->add(sNew);
+    
+    //delete the vector storing the old state of the spin:
+    if(spins[site]!=NULL)
+    { delete spins[site]; }
+    spins[site] = NULL;
+    
+    spins[site] = sNew;
+  }
+  else
+  {
+    //delete the vector storing the rejected new state of the spin:
+    if(sNew!=NULL)
+    { delete sNew; }
+    sNew = NULL;  
+  }
+  
+  //delete the vector storing the nearest neighbour sum:
+  if(nnSum!=NULL)
+  { delete nnSum; }
+  nnSum = NULL;
+}
+
 /*************************************** printCluster ***************************************/
 /*void Simulation::printCluster()
 {
@@ -566,7 +618,8 @@ void Simulation::randomizeLattice()
   for( int i=0; i<N; i++ )
   {
     mean = 0;
-    stddev = sqrt( T/(J*1.0*(coordNums[i] + sigmaBar)) );
+    //stddev = sqrt( T/(J*1.0*(coordNums[i] + sigmaBar)) );
+    stddev=1;
     spins[i] = new VecND(spinDim,randomGen, mean, stddev); 
   }
 }

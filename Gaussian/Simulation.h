@@ -55,6 +55,8 @@ private:
   double getHelicityModulus(int dir);
   double getSF();
   void   metropolisStep();
+  void   metropolisStep_2();  //does not use a normal distribution with width that depends 
+                              //on co-ordination number
   //void   printCluster();
   void   printLattice();
   void   printNeighbours();
