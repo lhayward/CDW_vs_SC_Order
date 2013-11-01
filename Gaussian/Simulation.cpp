@@ -202,7 +202,7 @@ void Simulation::runSim()
       outFile << std::endl;
       
       std::cout << (i+1) << " Bins Complete" << std::endl;
-      //std::cout << "Diamag. = " << aveDiamag << std::endl;
+      std::cout << "Diamag. = " << aveDiamag << std::endl;
       //std::cout << "J/(TN) * Sum |Psi|^2 = " << (J*aveSumPsiSq)/(1.0*T*N) << "\n" << std::endl;
     } //i (bins)
   }  //closes T loop
@@ -349,8 +349,8 @@ double Simulation::getDiamag()
   {
     //sum over indices corresponding to a=+\hat{x} and a=+\hat{y}:
     for( int j=0; j<maxZ; j=j+2 )
-    { term2 += crossProds[i][j]*( spins[i]->v_[0]*spins[neighbours[i][j]]->v_[1] ) 
-                                  - spins[i]->v_[1]*spins[neighbours[i][j]]->v_[0]; }
+    { term2 += crossProds[i][j]*( spins[i]->v_[0]*spins[neighbours[i][j]]->v_[1] 
+                                  - spins[i]->v_[1]*spins[neighbours[i][j]]->v_[0] ); }
   }
   term2 = J*J*term2*term2/(16.0*T*N);
   
