@@ -54,6 +54,7 @@ private:
   double getDiamag();
   double getHelicityModulus(int dir);
   double getSF();
+  double getSumPsiSq();
   void   metropolisStep();
   //void   printCluster();
   void   printLattice();
