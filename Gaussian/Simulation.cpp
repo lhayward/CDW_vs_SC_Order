@@ -202,8 +202,7 @@ void Simulation::runSim()
       outFile << std::endl;
       
       std::cout << (i+1) << " Bins Complete" << std::endl;
-      std::cout << "Diamag. = " << aveDiamag << std::endl;
-      //std::cout << "J/(TN) * Sum |Psi|^2 = " << (J*aveSumPsiSq)/(1.0*T*N) << "\n" << std::endl;
+      //std::cout << "Diamag. = " << aveDiamag << "\n" << std::endl;
     } //i (bins)
   }  //closes T loop
   
