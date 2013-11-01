@@ -198,6 +198,7 @@ void Simulation::runSim()
       outFile << std::endl;
       
       std::cout << (i+1) << " Bins Complete" << std::endl;
+      std::cout << "Diamag. = " << aveDiamag << "\n" << std::endl;
     } //i (bins)
   }  //closes T loop
   
@@ -386,44 +387,6 @@ double Simulation::getHelicityModulus(int dir)
   return helicityMod;
 }
 
-/************************************** getRandomVecND_3 **************************************
-* This is a method for generating a random point on a 4D unit sphere. This method was proposed by
-* Marsaglia in 1972. This method turns out to be the most efficient in 4D when compared to the
-* other two methods above for generating a random point on the surface of a 4D sphere.
-**********************************************************************************************/
-/*VecND* Simulation::getRandomVecND_3()
-{
-  double x1, x2, x3, x4;
-  double S1, S2;
-  double C;  //factor we need to multiply by at the end
-  
-  x1 = -1.0 + 2*(randomGen->randDblExc());
-  x2 = -1.0 + 2*(randomGen->randDblExc());
-  S1 = pow(x1,2) + pow(x2,2);
-  
-  while( S1 >= 1 )
-  {
-    x1 = -1.0 + 2*(randomGen->randDblExc());
-    x2 = -1.0 + 2*(randomGen->randDblExc());
-    S1 = pow(x1,2) + pow(x2,2);
-  }
-  
-  x3 = -1.0 + 2*(randomGen->randDblExc());
-  x4 = -1.0 + 2*(randomGen->randDblExc());
-  S2 = pow(x3,2) + pow(x4,2);
-  
-  while( S2 >= 1 )
-  {
-    x3 = -1.0 + 2*(randomGen->randDblExc());
-    x4 = -1.0 + 2*(randomGen->randDblExc());
-    S2 = pow(x3,2) + pow(x4,2);
-  }
-  
-  C = pow(abs(1.0-S1)/S2,0.5);
-  
-  return new VecND(x1,x2,x3*C,x4*C);
-}*/
-
 /******************************************* getSF *******************************************/
 double Simulation::getSF()
 {
@@ -474,59 +437,7 @@ void Simulation::metropolisStep()
   //Generate the new spin using a Gaussian distribution based on the on-site term in the 
   //Hamiltonian:
   site = randomGen->randInt(N-1);
-  stddev = sqrt( T/(J*1.0*(coordNums[site] + sigmaBar)) );;
-  sNew = new VecND( spinDim, randomGen, mean, stddev );
-  
-  //loop to calculate the nearest neighbour sum:
-  for( int i=0; i<maxZ; i++ )
-  { nnSum->add(spins[neighbours[site][i]]); }
-  
-  //The on-site contribution is taken care of by the normal distribution used to generate the
-  //random new spin. Therefore, delta(E) is from nearest neighbour interactions only:
-  deltaE = -1*J*( nnSum->dot(sNew) - nnSum->dot(spins[site]) );
-  
-  if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
-  {
-    //Calculate energy and mag before writing to file, not now:
-    //energy += deltaE;
-    //mag->subtract(spins[site]);
-    //mag->add(sNew);
-    
-    //delete the vector storing the old state of the spin:
-    if(spins[site]!=NULL)
-    { delete spins[site]; }
-    spins[site] = NULL;
-    
-    spins[site] = sNew;
-  }
-  else
-  {
-    //delete the vector storing the rejected new state of the spin:
-    if(sNew!=NULL)
-    { delete sNew; }
-    sNew = NULL;  
-  }
-  
-  //delete the vector storing the nearest neighbour sum:
-  if(nnSum!=NULL)
-  { delete nnSum; }
-  nnSum = NULL;
-}
-
-/************************************* metropolisStep_2 ************************************/  
-void Simulation::metropolisStep_2()
-{
-  int site;
-  double deltaE;
-  double mean = 0;
-  double stddev;
-  VecND* sNew; // = new VecND(spinDim, randomGen);
-  VecND* nnSum = new VecND(spinDim,0);
-  
-  //Generate the new spin using a Gaussian distribution based on the on-site term in the 
-  //Hamiltonian:
-  site = randomGen->randInt(N-1);
-  stddev = sqrt( T/(J*1.0*(coordNums[site] + sigmaBar)) );;
+  stddev = sqrt( T/(J*1.0*(coordNums[site] + sigmaBar)) );
   sNew = new VecND( spinDim, randomGen, mean, stddev );
   
   //loop to calculate the nearest neighbour sum:
@@ -612,14 +523,12 @@ void Simulation::printLattice()
 /************************************** randomizeLattice *************************************/
 void Simulation::randomizeLattice()
 {
-  double mean;
+  double mean=0;
   double stddev;
   
   for( int i=0; i<N; i++ )
   {
-    mean = 0;
-    //stddev = sqrt( T/(J*1.0*(coordNums[i] + sigmaBar)) );
-    stddev=1;
+    stddev = sqrt( T/(J*1.0*(coordNums[i] + sigmaBar)) );
     spins[i] = new VecND(spinDim,randomGen, mean, stddev); 
   }
 }

@@ -55,8 +55,6 @@ private:
   double getHelicityModulus(int dir);
   double getSF();
   void   metropolisStep();
-  void   metropolisStep_2();  //does not use a normal distribution with width that depends 
-                              //on co-ordination number
   //void   printCluster();
   void   printLattice();
   void   printNeighbours();
@@ -65,9 +63,6 @@ private:
   void   sweep();
   //void   wolffStep();
   
-  //methods for generating a random point on an N-dimensional unit hypersphere (proposed by 
-  //Marsaglia for N=4):
-  //VecND* getRandomVecND_3();
 public:
   Simulation(double J, double sigmaBar, vector<double>* TList, int L,
              MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, int measPerBin, 
