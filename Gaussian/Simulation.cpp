@@ -387,6 +387,44 @@ double Simulation::getHelicityModulus(int dir)
   return helicityMod;
 }
 
+/************************************** getRandomVecND_3 **************************************
+* This is a method for generating a random point on a 4D unit sphere. This method was proposed by
+* Marsaglia in 1972. This method turns out to be the most efficient in 4D when compared to the
+* other two methods above for generating a random point on the surface of a 4D sphere.
+**********************************************************************************************/
+/*VecND* Simulation::getRandomVecND_3()
+{
+  double x1, x2, x3, x4;
+  double S1, S2;
+  double C;  //factor we need to multiply by at the end
+  
+  x1 = -1.0 + 2*(randomGen->randDblExc());
+  x2 = -1.0 + 2*(randomGen->randDblExc());
+  S1 = pow(x1,2) + pow(x2,2);
+  
+  while( S1 >= 1 )
+  {
+    x1 = -1.0 + 2*(randomGen->randDblExc());
+    x2 = -1.0 + 2*(randomGen->randDblExc());
+    S1 = pow(x1,2) + pow(x2,2);
+  }
+  
+  x3 = -1.0 + 2*(randomGen->randDblExc());
+  x4 = -1.0 + 2*(randomGen->randDblExc());
+  S2 = pow(x3,2) + pow(x4,2);
+  
+  while( S2 >= 1 )
+  {
+    x3 = -1.0 + 2*(randomGen->randDblExc());
+    x4 = -1.0 + 2*(randomGen->randDblExc());
+    S2 = pow(x3,2) + pow(x4,2);
+  }
+  
+  C = pow(abs(1.0-S1)/S2,0.5);
+  
+  return new VecND(x1,x2,x3*C,x4*C);
+}*/
+
 /******************************************* getSF *******************************************/
 double Simulation::getSF()
 {
@@ -475,7 +513,6 @@ void Simulation::metropolisStep()
   { delete nnSum; }
   nnSum = NULL;
 }
-
 /*************************************** printCluster ***************************************/
 /*void Simulation::printCluster()
 {
@@ -488,6 +525,7 @@ void Simulation::metropolisStep()
   std::cout << std::endl;
 }*/
 
+/************************************** printNeighbours **************************************/
 void Simulation::printNeighbours()
 {
   for( int i=0; i<N; i++ )
