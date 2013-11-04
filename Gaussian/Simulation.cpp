@@ -419,26 +419,6 @@ double Simulation::getSumPsiSq()
   return sumPsiSq;
 }
 
-/**************************************** isInCluster ****************************************
-* This function checks whether or not spin at the passed site is in the cluster.
-*********************************************************************************************/  
-/*bool Simulation::isInCluster(int site)
-{
-  int i;
-  int clustSize = (int)cluster->size();
-  bool found = false;
-  
-  i=0;
-  while( !found && i<clustSize )
-  {
-    if( cluster->at(i)==site )
-    { found = true; }
-    i++;
-  }  //closes while loop
-  
-  return found;
-}*/
-
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
 {

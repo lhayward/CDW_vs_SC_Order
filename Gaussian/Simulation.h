@@ -48,7 +48,6 @@ private:
   //void   clearCluster();
   //void   flipCluster(VecND* r);
   ////void   flipSpin(int site, Vec4D* r);  //for original Wolff cluster algorithm
-  ////bool   isInCluster(int site);
   //double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
   double getDiamag();
