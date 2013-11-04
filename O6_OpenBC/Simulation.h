@@ -29,6 +29,9 @@ private:
   int                  maxZ;  //max. coordinate number
   int                  numWarmUpSweeps, sweepsPerMeas, measPerBin, numBins;
   VecND**              spins;
+  int**                crossProds;  //2D array, where crossProds[i][a] stores TWICE the cross 
+                                    //product of r_i with bond vector "a" ( a=0 => \hat{x},
+                                    //a=1 => -\hat{x}, a=2 => \hat{y}, a=3 => -\hat{y} )
   int**                neighbours;
   const char*          outputFileName;
   MTRand*              randomGen;

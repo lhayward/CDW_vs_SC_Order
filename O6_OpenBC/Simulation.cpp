@@ -49,6 +49,9 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
   neighbours = new int*[N];
   for( int i=0; i<N; i++ )
   { neighbours[i] = new int[maxZ]; }
+  crossProds = new int*[N];
+  for( int i=0; i<N; i++ )
+  { crossProds[i] = new int[maxZ]; }
   setUpNeighbours();
   
   calculateEnergy();
@@ -73,6 +76,10 @@ Simulation::~Simulation()
   for(int i=0; i<N; i++)
   { delete[] neighbours[i]; }
   delete[] neighbours; 
+  
+  for(int i=0; i<N; i++)
+  { delete[] crossProds[i]; }
+  delete[] crossProds;
   
   if(mag!=NULL)
   { delete mag; }
@@ -523,6 +530,7 @@ void Simulation::randomizeLattice()
 *********************************************************************************************/
 void Simulation::setUpNeighbours()
 {
+  /*
   int i,x,y;
   
   //loop to assign the neighbours (with periodic boundary conditions):
@@ -541,7 +549,7 @@ void Simulation::setUpNeighbours()
         { y = y - L*L; }
     neighbours[i][2] = y;  //+y neighbour of i is y
     neighbours[y][3] = i;  //-y neighbour of y is i  
-  }  //closes for loop
+  }  //closes for loop*/
 }
 
 /******************************************* sweep ******************************************/  
