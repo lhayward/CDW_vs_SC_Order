@@ -148,7 +148,6 @@ void Simulation::runSim()
         currn = mag->getMultiple(1.0/N);
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
-        currPsiSq = currnSq->v_[0] + currnSq->v_[1];
         
         aveE         += energy/N;
         aveESq       += pow( (energy/N), 2);
