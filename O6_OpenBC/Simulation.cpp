@@ -115,10 +115,10 @@ void Simulation::runSim()
   for(TIndex=0; TIndex<(TList->size()); TIndex++)
   {
     T = TList->at(TIndex);
-    std::cout << "\n******** L = " << L << ", T = " << T << " (Temperature #" << (TIndex+1) 
+    std::cout << "\n******** L = " << L << ", T = " << T << " (Temperature #" << (TIndex+1)
               << ") ********" << std::endl;
     
-    //take out the following two lines if you want the system to use its previous state from 
+    //take out the following two lines if you want the system to use its previous state from
     //the last temperature (i.e. cooling the system):
     randomizeLattice();
     
@@ -158,7 +158,6 @@ void Simulation::runSim()
         currn = mag->getMultiple(1.0/N);
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
-        currPsiSq = currnSq->v_[0] + currnSq->v_[1];
         
         aveE         += energy/N;
         aveESq       += pow( (energy/N), 2);
@@ -530,6 +529,92 @@ void Simulation::randomizeLattice()
 *********************************************************************************************/
 void Simulation::setUpNeighbours()
 {
+  int ix,  iy;  //coordinates of spin i
+  int inx, iny; //coordinates of spin i's neighbour
+  
+  //loop to assign the neighbours (with open boundary conditions):
+  for( int i=0; i<N; i++ )
+  {
+    ix = i%L;
+    iy = (i-ix)/L;
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the right (+x direction):
+    inx=ix+1;
+    iny=iy;
+    //if spin i is not on the right-hand boundary:
+    if( inx < L )
+    {
+      neighbours[i][0] = iny*L + inx;
+      crossProds[i][0] = -1*(2*iy - L + 1);
+      
+    }
+    //if spin i is on the right-hand boundary:
+    else
+    {
+      neighbours[i][0] = extraSpinLoc; //neighbour is the extra "spin" at the end of the spin
+                                       //array (with value 0)
+      crossProds[i][0] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the left (-x direction):
+    inx=ix-1;
+    iny=iy;
+    //if spin i is not on the left-hand boundary:
+    if( inx >= 0 )
+    {
+      neighbours[i][1] = iny*L + inx;
+      crossProds[i][1] = 2*iy - L + 1;
+      
+    }
+    //if spin i is on the left-hand boundary:
+    else
+    {
+      neighbours[i][1] = extraSpinLoc; //neighbour is the extra "spin" at the end of the spin
+                                       //array (with value 0)
+      crossProds[i][1] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the top (+y direction):
+    inx=ix;
+    iny=iy+1;
+    //if spin i is not on the top boundary:
+    if( iny < L)
+    {
+      neighbours[i][2] = iny*L + inx;
+      crossProds[i][2] = 2*ix - L + 1;
+      
+    }
+    //if spin i is on the top boundary:
+    else
+    {
+      neighbours[i][2] = extraSpinLoc; //neighbour is the extra "spin" at the end of the spin
+                                       //array (with value 0)
+      crossProds[i][2] = 0;
+    }
+    
+    //-----------------------------------------------------------------------------------------
+    //assign the neighbour to the bottom (-y direction):
+    inx=ix;
+    iny=iy-1;
+    //if spin i is not on the bottom boundary:
+    if( iny >= 0 )
+    {
+      neighbours[i][3] = iny*L + inx;
+      crossProds[i][3] = -1*(2*ix - L + 1);
+      
+    }
+    //if spin i is on the bottom boundary:
+    else
+    {
+      neighbours[i][3] = extraSpinLoc; //neighbour is the extra "spin" at the end of the spin
+                                       //array (with value 0)
+      crossProds[i][3] = 0;
+    }
+    
+  }  //closes for loop
   /*
   int i,x,y;
   
