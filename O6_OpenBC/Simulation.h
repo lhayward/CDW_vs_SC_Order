@@ -24,8 +24,9 @@ private:
   double               energy;  //total energy
   double               isingOrderParam;
   VecND*               mag;     //total magnetization
-  uint                 spinDim;
+  uint                 spinDim, extraSpinLoc;
   int                  L,N;
+  int                  maxZ;  //max. coordinate number
   int                  numWarmUpSweeps, sweepsPerMeas, measPerBin, numBins;
   VecND**              spins;
   int**                neighbours;

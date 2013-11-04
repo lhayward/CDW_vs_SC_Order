@@ -23,6 +23,7 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
                        int measPerBin, int numBins, const char* outputFileName)
 {
   spinDim               = 6;
+  maxZ                  = 4;
   this->J               = J;
   this->lambda          = lambda;
   this->g               = g;
@@ -37,15 +38,17 @@ Simulation::Simulation(double J, double lambda, double g, double w, vector<doubl
   this->numBins         = numBins;
   this->outputFileName  = outputFileName;
   
-  spins = new VecND*[N];
-  //for( int i=0; i<N; i++ )
-  //{ spins[i] = getRandomVecND_1(); }
+  spins = new VecND*[N+1];
+  extraSpinLoc=N;
+  spins[extraSpinLoc] = new VecND(spinDim,0);  //The (N+1)st spin is an effective neighbour for 
+                                               //spins on the lattice boundary. The value of 
+                                               //this spin is zero so that it does not affect 
+                                               //values of observables.
   randomizeLattice();
   
   neighbours = new int*[N];
   for( int i=0; i<N; i++ )
-  { neighbours[i] = new int[4]; }
-  
+  { neighbours[i] = new int[maxZ]; }
   setUpNeighbours();
   
   calculateEnergy();
@@ -515,8 +518,8 @@ void Simulation::randomizeLattice()
 }
 
 /************************************** setUpNeighbours **************************************
-* This functions sets up the "neighbours" array for a square lattice with periodic boundary
-* conditions. 
+* This functions sets up the "neighbours" and "crossProds" arrays for a square lattice with 
+* open boundary conditions. 
 *********************************************************************************************/
 void Simulation::setUpNeighbours()
 {
