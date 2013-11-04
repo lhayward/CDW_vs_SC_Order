@@ -529,8 +529,8 @@ void Simulation::randomizeLattice()
 }
 
 /************************************** setUpNeighbours **************************************
-* This functions sets up the "neighbours" and "coordNums" arrays for a square lattice with 
-* open boundary conditions. 
+* This functions sets up the "neighbours", "crossProds" and "coordNums" arrays for a square 
+* lattice with open boundary conditions. 
 *********************************************************************************************/
 void Simulation::setUpNeighbours()
 {
