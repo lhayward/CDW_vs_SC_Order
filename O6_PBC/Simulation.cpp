@@ -86,14 +86,13 @@ void Simulation::runSim()
   unsigned int      TIndex;
   ofstream          outFile;
   string            spinFileName;
-  //double            currM;
-  double            currPsiSq;
+  //double            currPsiSq;
   VecND*            currn;
   VecND*            currnSq;
   double            aveE, aveESq;
   double            aveHelicityX, aveHelicityY;
   double            aveM, aveMAbs, aveMSq, aveM4;
-  double            avePsiSq, avePsi4;
+  //double            avePsiSq, avePsi4;
   //double            aveSF, aveSFPhi;
   VecND* aven   = new VecND(spinDim,0);
   VecND* avenSq = new VecND(spinDim,0);
@@ -105,9 +104,9 @@ void Simulation::runSim()
   //loop over all temperatures:
   for(TIndex=0; TIndex<(TList->size()); TIndex++)
   {
-    //T = TMax - TIndex*(TMax-TMin)/( (double)max(1,(numTSteps-1)) );
     T = TList->at(TIndex);
-    std::cout << "\n******** L = " << L << ", T = " << T << " (Temperature #" << (TIndex+1) << ") ********" << std::endl;
+    std::cout << "\n******** L = " << L << ", T = " << T << " (Temperature #" << (TIndex+1) 
+              << ") ********" << std::endl;
     
     //take out the following two lines if you want the system to use its previous state from 
     //the last temperature (i.e. cooling the system):
@@ -127,8 +126,8 @@ void Simulation::runSim()
       aveMAbs=0;
       aveMSq=0;
       aveM4=0;
-      avePsiSq=0;
-      avePsi4=0;
+      //avePsiSq=0;
+      //avePsi4=0;
       aven->clear();
       avenSq->clear();
       //aveSF = 0;
@@ -149,7 +148,6 @@ void Simulation::runSim()
         currn = mag->getMultiple(1.0/N);
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
-        //currM = currnSq->v_[2] + currnSq->v_[3] - currnSq->v_[4] - currnSq->v_[5];
         currPsiSq = currnSq->v_[0] + currnSq->v_[1];
         
         aveE         += energy/N;
@@ -162,8 +160,8 @@ void Simulation::runSim()
         aveMAbs      += abs(isingOrderParam);
         aveMSq       += pow(isingOrderParam, 2);
         aveM4        += pow(isingOrderParam, 4);
-        avePsiSq     += currPsiSq;
-        avePsi4      += pow(currPsiSq,2);
+        //avePsiSq     += currPsiSq;
+        //avePsi4      += pow(currPsiSq,2);
         aven->add(currn);
         avenSq->add(currnSq);
         
@@ -187,15 +185,14 @@ void Simulation::runSim()
       aveMAbs      = aveMAbs/measPerBin;
       aveMSq       = aveMSq/measPerBin;
       aveM4        = aveM4/measPerBin;
-      avePsiSq     = avePsiSq/measPerBin;
-      avePsi4      = avePsi4/measPerBin;
+      //avePsiSq     = avePsiSq/measPerBin;
+      //avePsi4      = avePsi4/measPerBin;
       aven->multiply(1.0/measPerBin);
       avenSq->multiply(1.0/measPerBin);
       
       outFile << L << '\t' << T << '\t' << (i+1) << '\t' << aveE << '\t' << aveESq << '\t'
               << aveHelicityX << '\t' << aveHelicityY << '\t'
-              << aveM << '\t' << aveMAbs << '\t' << aveMSq << '\t' << aveM4 << '\t'
-              << avePsiSq << '\t' << avePsi4 << '\t';
+              << aveM << '\t' << aveMAbs << '\t' << aveMSq << '\t' << aveM4 << '\t';
       for( uint j=0; j<spinDim; j++ )
       { outFile << aven->v_[j] << '\t'; }
       for( uint j=0; j<spinDim; j++ )
@@ -287,11 +284,11 @@ void Simulation::clearCluster()
     cluster->pop_back(); 
   }
   
-  for( int i=0; i<N; i++ )
+  /*for( int i=0; i<N; i++ )
   {
     if( inCluster[i]==1 )
     { cout << "*** 1 ***" << endl; }
-  }
+  }*/
 }
 
 /**************************************** flipCluster *****************************************
@@ -405,44 +402,6 @@ double Simulation::getHelicityModulus(int dir)
   return helicityMod;
 }
 
-/************************************** getRandomVecND_3 **************************************
-* This is a method for generating a random point on a 4D unit sphere. This method was proposed by
-* Marsaglia in 1972. This method turns out to be the most efficient in 4D when compared to the
-* other two methods above for generating a random point on the surface of a 4D sphere.
-**********************************************************************************************/
-/*VecND* Simulation::getRandomVecND_3()
-{
-  double x1, x2, x3, x4;
-  double S1, S2;
-  double C;  //factor we need to multiply by at the end
-  
-  x1 = -1.0 + 2*(randomGen->randDblExc());
-  x2 = -1.0 + 2*(randomGen->randDblExc());
-  S1 = pow(x1,2) + pow(x2,2);
-  
-  while( S1 >= 1 )
-  {
-    x1 = -1.0 + 2*(randomGen->randDblExc());
-    x2 = -1.0 + 2*(randomGen->randDblExc());
-    S1 = pow(x1,2) + pow(x2,2);
-  }
-  
-  x3 = -1.0 + 2*(randomGen->randDblExc());
-  x4 = -1.0 + 2*(randomGen->randDblExc());
-  S2 = pow(x3,2) + pow(x4,2);
-  
-  while( S2 >= 1 )
-  {
-    x3 = -1.0 + 2*(randomGen->randDblExc());
-    x4 = -1.0 + 2*(randomGen->randDblExc());
-    S2 = pow(x3,2) + pow(x4,2);
-  }
-  
-  C = pow(abs(1.0-S1)/S2,0.5);
-  
-  return new VecND(x1,x2,x3*C,x4*C);
-}*/
-
 /******************************************* getSF *******************************************/
 double Simulation::getSF()
 {
@@ -477,26 +436,6 @@ double Simulation::getSFPhi()
   return SFPhi;
 }
 
-/**************************************** isInCluster ****************************************
-* This function checks whether or not spin at the passed site is in the cluster.
-*********************************************************************************************/  
-/*bool Simulation::isInCluster(int site)
-{
-  int i;
-  int clustSize = (int)cluster->size();
-  bool found = false;
-  
-  i=0;
-  while( !found && i<clustSize )
-  {
-    if( cluster->at(i)==site )
-    { found = true; }
-    i++;
-  }  //closes while loop
-  
-  return found;
-}*/
-
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
 {
@@ -513,19 +452,17 @@ void Simulation::metropolisStep()
   { nnSum->add(spins[neighbours[site][i]]); }
   
   deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
-               - lambda*(nnSum->dotForRange(sNew,2,spinDim-1) - nnSum->dotForRange(spins[site],2,spinDim-1)) 
+               - lambda*(nnSum->dotForRange(sNew,2,spinDim-1) 
+                         - nnSum->dotForRange(spins[site],2,spinDim-1)) 
                + (g + 4*(lambda-1.0))/2.0*(sNew->getSquareForRange(2,spinDim-1) 
                                           - spins[site]->getSquareForRange(2,spinDim-1)) 
-               + w/2.0*(pow(sNew->getSquareForRange(2,3),2.0) + pow(sNew->getSquareForRange(4,5),2.0) 
-                        - pow(spins[site]->getSquareForRange(2,3),2.0) - pow(spins[site]->getSquareForRange(4,5),2.0)) );
+               + w/2.0*(pow(sNew->getSquareForRange(2,3),2.0) 
+                        + pow(sNew->getSquareForRange(4,5),2.0) 
+                        - pow(spins[site]->getSquareForRange(2,3),2.0) 
+                        - pow(spins[site]->getSquareForRange(4,5),2.0)) );
   
   if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
-  {
-    //Calculate energy and mag before writing to file, not now:
-    //energy += deltaE;
-    //mag->subtract(spins[site]);
-    //mag->add(sNew);
-    
+  { 
     //delete the vector storing the old state of the spin:
     if(spins[site]!=NULL)
     { delete spins[site]; }
@@ -652,7 +589,7 @@ void Simulation::wolffStep()
       reflectedSpin = spins[site]->getReflection(r);
       exponent = (2.0*J/T)*( r->dot(reflectedSpin) ) * ( r->dot(spins[neighbours[site][i]]) );
       if (exponent < 0 )
-      {
+      { 
         PAdd = 1.0 - exp(exponent);
         //if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
         if( !( inCluster[ neighbours[site][i] ] ) && (randomGen->randDblExc() < PAdd) )
