@@ -377,6 +377,34 @@ double Simulation::getCPhi(int i, int j)
   return spins[i]->dotForRange(spins[j],2,3);
 }
 
+/***************************************** getDiamag *****************************************/
+double Simulation::getDiamag()
+{
+  double diamag = 0;  // M/B
+  double term1 = 0; //First term in the expression for M/B
+  double term2 = 0; //Second term in the expression for M/B
+  
+  for( int i=0; i<N; i++ )
+  {
+    //sum over indices corresponding to a=+\hat{x} and a=+\hat{y}:
+    for( int j=0; j<maxZ; j=j+2 )
+    { term1 += crossProds[i][j]*crossProds[i][j]*spins[i]->dotForRange( spins[ neighbours[i][j] ],0,1 ); }
+  }
+  term1 *= -1*J/(16.0*N);
+  
+  for( int i=0; i<N; i++ )
+  {
+    //sum over indices corresponding to a=+\hat{x} and a=+\hat{y}:
+    for( int j=0; j<maxZ; j=j+2 )
+    { term2 += crossProds[i][j]*( spins[i]->v_[0]*spins[neighbours[i][j]]->v_[1] 
+                                  - spins[i]->v_[1]*spins[neighbours[i][j]]->v_[0] ); }
+  }
+  term2 = J*J*term2*term2/(16.0*T*N);
+  
+  diamag = term1 + term2;
+  return diamag;
+}
+
 /************************************* getHelicityModulus *************************************
 * Calculates and returns the helicity modulus for the desired lattice directions.
 * Note: dir=0 corresponds to the x-direction
@@ -448,7 +476,6 @@ double Simulation::getSFPhi()
 /************************************** metropolisStep *************************************/  
 void Simulation::metropolisStep()
 {
-  int numNeighbours = 4;
   int site;
   double deltaE;
   VecND* sNew = new VecND(spinDim, randomGen);
@@ -457,7 +484,7 @@ void Simulation::metropolisStep()
   site = randomGen->randInt(N-1);
   
   //loop to calculate the nearest neighbour sum:
-  for( int i=0; i<numNeighbours; i++ )
+  for( int i=0; i<maxZ; i++ )
   { nnSum->add(spins[neighbours[site][i]]); }
   
   deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
@@ -512,6 +539,27 @@ void Simulation::printLattice()
   {
     std::cout << "Spin " << i << ": ";
     spins[i]->print();
+  }
+  std::cout << std::endl;
+}
+
+/************************************** printNeighbours **************************************/
+void Simulation::printNeighbours()
+{
+  for( int i=0; i<N; i++ )
+  {
+    std::cout << "Spin " << i << ": " << std::endl;
+    
+    std::cout << "  Neighbours: [  ";
+    for( int j=0; j<maxZ; j++ )
+    { std::cout << neighbours[i][j] << "  "; }
+    std::cout << "]" << std::endl;
+    
+    std::cout << "  Cross Products: [  ";
+    for( int j=0; j<maxZ; j++ )
+    { std::cout << crossProds[i][j] << "  "; }
+    std::cout << "]" << std::endl;
+    
   }
   std::cout << std::endl;
 }
@@ -615,26 +663,6 @@ void Simulation::setUpNeighbours()
     }
     
   }  //closes for loop
-  /*
-  int i,x,y;
-  
-  //loop to assign the neighbours (with periodic boundary conditions):
-  for( i=0; i<N; i++ )
-  {
-    //assign the x-direction neighbours:
-    x = i+1;
-    if( (i+1)%L==0 )
-    { x = x - L; }
-    neighbours[i][0] = x; //+x neighbour of i is x
-    neighbours[x][1] = i; //-x neighbour of x is i
-    
-    //assign the y-direction neighbours:
-    y = i+L;
-        if( y%(L*L) < L )
-        { y = y - L*L; }
-    neighbours[i][2] = y;  //+y neighbour of i is y
-    neighbours[y][3] = i;  //-y neighbour of y is i  
-  }  //closes for loop*/
 }
 
 /******************************************* sweep ******************************************/  
@@ -657,7 +685,6 @@ void Simulation::sweep()
 /***************************************** wolffStep ****************************************/
 void Simulation::wolffStep()
 {
-  int numNeighbours = 4;
   int i, site;
   double PAdd;
   double exponent;  //exponent for PAdd
@@ -678,28 +705,33 @@ void Simulation::wolffStep()
   {
     site = buffer->back();
     buffer->pop_back();
-    for( i=0; i<numNeighbours; i++ )
+    for( i=0; i<maxZ; i++ )
     {
-      //Note: spins[site] is not flipped yet so we have to consider the energy difference that
-      //      would result if it were already flipped:
-      reflectedSpin = spins[site]->getReflection(r);
-      exponent = (2.0*J/T)*( r->dot(reflectedSpin) ) * ( r->dot(spins[neighbours[site][i]]) );
-      if (exponent < 0 )
-      { 
-        PAdd = 1.0 - exp(exponent);
-        //if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
-        if( !( inCluster[ neighbours[site][i] ] ) && (randomGen->randDblExc() < PAdd) )
+      //check if the neighbour is outside the lattice (i.e. check if the neighbour is the extra
+      //spin stored to implement the open boundary conditions):
+      if( neighbours[site][i] != extraSpinLoc )
+      {
+        //Note: spins[site] is not flipped yet so we have to consider the energy difference that
+        //      would result if it were already flipped:
+        reflectedSpin = spins[site]->getReflection(r);
+        exponent = (2.0*J/T)*( r->dot(reflectedSpin) ) * ( r->dot(spins[neighbours[site][i]]) );
+        if (exponent < 0 )
         { 
-          //flipSpin(neighbours[site][i],r); 
-          inCluster[ neighbours[site][i] ] = 1;
-          cluster->push_back( neighbours[site][i] );
-          buffer ->push_back( neighbours[site][i] );
+          PAdd = 1.0 - exp(exponent);
+          //if( (randomGen->randDblExc() < PAdd) && !(isInCluster(neighbours[site][i])) )
+          if( !( inCluster[ neighbours[site][i] ] ) && (randomGen->randDblExc() < PAdd) )
+          { 
+            //flipSpin(neighbours[site][i],r); 
+            inCluster[ neighbours[site][i] ] = 1;
+            cluster->push_back( neighbours[site][i] );
+            buffer ->push_back( neighbours[site][i] );
+          }
         }
-      }
       
-      if(reflectedSpin!=NULL)
-      { delete reflectedSpin; }
-      reflectedSpin = NULL;
+        if(reflectedSpin!=NULL)
+        { delete reflectedSpin; }
+        reflectedSpin = NULL;
+      } //ends if that checks if the neighbour is outside the lattice
     }  //for loop over neighbours
   } //while loop for buffer
   
