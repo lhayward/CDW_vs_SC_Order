@@ -100,6 +100,7 @@ void Simulation::runSim()
   VecND*            currn;
   VecND*            currnSq;
   double            aveE, aveESq;
+  double            aveDiamag;
   double            aveHelicityX, aveHelicityY;
   double            aveM, aveMAbs, aveMSq, aveM4;
   //double            avePsiSq, avePsi4;
@@ -130,8 +131,11 @@ void Simulation::runSim()
     {
       aveE=0;
       aveESq=0;
+      aveDiamag=0;
       aveHelicityX=0;
       aveHelicityY=0;
+      //aveSF = 0;
+      //aveSFPhi = 0;
       aveM=0;
       aveMAbs=0;
       aveMSq=0;
@@ -140,8 +144,6 @@ void Simulation::runSim()
       //avePsi4=0;
       aven->clear();
       avenSq->clear();
-      //aveSF = 0;
-      //aveSFPhi = 0;
   
       for( int j=0; j<measPerBin; j++ )
       { 
@@ -161,10 +163,11 @@ void Simulation::runSim()
         
         aveE         += energy/N;
         aveESq       += pow( (energy/N), 2);
-        //aveSF      += getSF();
-        //aveSFPhi   += getSFPhi();
+        aveDiamag    += getDiamag();
         aveHelicityX += getHelicityModulus(0);
         aveHelicityY += getHelicityModulus(1);
+        //aveSF      += getSF();
+        //aveSFPhi   += getSFPhi();
         aveM         += isingOrderParam;
         aveMAbs      += abs(isingOrderParam);
         aveMSq       += pow(isingOrderParam, 2);
@@ -186,6 +189,7 @@ void Simulation::runSim()
       //calculate average for the bin:
       aveE         = aveE/measPerBin;
       aveESq       = aveESq/measPerBin;
+      aveDiamag    = aveDiamag/measPerBin;
       aveHelicityX = aveHelicityX/measPerBin;
       aveHelicityY = aveHelicityY/measPerBin;
       //aveSF      = aveSF/measPerBin;
@@ -200,7 +204,7 @@ void Simulation::runSim()
       avenSq->multiply(1.0/measPerBin);
       
       outFile << L << '\t' << T << '\t' << (i+1) << '\t' << aveE << '\t' << aveESq << '\t'
-              << aveHelicityX << '\t' << aveHelicityY << '\t'
+              << aveDiamag << '\t' << aveHelicityX << '\t' << aveHelicityY << '\t'
               << aveM << '\t' << aveMAbs << '\t' << aveMSq << '\t' << aveM4 << '\t';
       for( uint j=0; j<spinDim; j++ )
       { outFile << aven->v_[j] << '\t'; }
