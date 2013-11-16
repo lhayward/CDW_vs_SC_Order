@@ -183,7 +183,7 @@ void readDoubleList(vector<double>* list, ifstream* in, char delim, char startCh
   currLine = currLine.substr(startIndex+1, (endIndex - startIndex - 1) );
   
   commaIndex = currLine.find_first_of(",");
-  while( commaIndex>=0 && commaIndex<currLine.size() )
+  while( commaIndex<currLine.size() )
   {
     list->push_back( strtod( (currLine.substr(0, commaIndex)).c_str(), NULL) );
     currLine = currLine.substr(commaIndex+1);

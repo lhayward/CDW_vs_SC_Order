@@ -20,9 +20,11 @@ public:
   typedef unsigned int  uint;
   
 private:
+  static const bool    MEASURE_CORRELATIONS=true;
+  
   double               J,lambda,g,w,T;
   double               energy;  //total energy
-  double               isingOrderParam;
+  double               isingOrderParam;  
   VecND*               mag;     //total magnetization
   uint                 spinDim;
   int                  L,N;
@@ -46,12 +48,13 @@ private:
   //void   flipSpin(int site, Vec4D* r);  //for original Wolff cluster algorithm
   double getClusterOnSiteEnergy();
   double getCorrelation(int i, int j);
-  double getCPhi(int i, int j);
+  double getCPhi1(int i, int j);
   double getHelicityModulus(int dir);
   double getSF();
   double getSFPhi();
   void   metropolisStep();
   //void   printCluster();
+  int    getPeriodicDistance(int ix, int iy);
   void   printLattice();
   void   randomizeLattice();
   void   setUpNeighbours();

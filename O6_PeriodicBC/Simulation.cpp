@@ -84,7 +84,9 @@ Simulation::~Simulation()
 void Simulation::runSim()
 {
   unsigned int      TIndex;
+  string            correlationsFileName(outputFileName);
   ofstream          outFile;
+  ofstream          outFileCorrelations;
   string            spinFileName;
   //double            currPsiSq;
   VecND*            currn;
@@ -92,14 +94,50 @@ void Simulation::runSim()
   double            aveE, aveESq;
   double            aveHelicityX, aveHelicityY;
   double            aveM, aveMAbs, aveMSq, aveM4;
+  double**          aveCorrelationsPhi1;
+  int**             correlationCounts;
+  int               x1,y1;
+  int               x2,y2;
+  int               dx,dy;
+  
   //double            avePsiSq, avePsi4;
   //double            aveSF, aveSFPhi;
   VecND* aven   = new VecND(spinDim,0);
   VecND* avenSq = new VecND(spinDim,0);
   
-  
   outFile.open(outputFileName);
   outFile.precision(20);
+  correlationsFileName = "correlations_" + correlationsFileName;
+  
+  correlationCounts   = new int*[(L/2)+1];
+  aveCorrelationsPhi1 = new double*[(L/2)+1];
+  for( int i=0; i<((L/2)+1); i++ )
+  {
+    correlationCounts[i]   = new int[(L/2)+1];
+    aveCorrelationsPhi1[i] = new double[(L/2)+1];
+    for( int j=0; j<((L/2)+1); j++ )
+    { 
+      correlationCounts[i][j] = 0; 
+      aveCorrelationsPhi1[i][j] = 0;
+    }
+  }
+  if( MEASURE_CORRELATIONS )
+  {
+    outFileCorrelations.open(correlationsFileName.c_str());
+    outFileCorrelations.precision(20);
+  
+    for( int i=0; i<N; i++ )
+    {
+      x1 = i%L;
+      y1 = (i-x1)/L;
+      for( int j=0; j<N; j++ )
+      {
+        x2 = j%L;
+        y2 = (j-x2)/L;
+        correlationCounts[ getPeriodicDistance(x1,x2) ][ getPeriodicDistance(y1,y2) ]++;
+      }
+    }
+  } //if
   
   //loop over all temperatures:
   for(TIndex=0; TIndex<(TList->size()); TIndex++)
@@ -132,6 +170,14 @@ void Simulation::runSim()
       avenSq->clear();
       //aveSF = 0;
       //aveSFPhi = 0;
+      if( MEASURE_CORRELATIONS )
+      {
+        for( int i=0; i<((L/2)+1); i++ )
+        {
+          for( int j=0; j<((L/2)+1); j++ )
+          { aveCorrelationsPhi1[i][j] = 0; }
+        }
+      }
   
       for( int j=0; j<measPerBin; j++ )
       { 
@@ -163,6 +209,23 @@ void Simulation::runSim()
         //avePsi4      += pow(currPsiSq,2);
         aven->add(currn);
         avenSq->add(currnSq);
+        if( MEASURE_CORRELATIONS )
+        {
+          for( int s1=0; s1<N; s1++ )
+          {
+            x1 = s1%L;
+            y1 = (s1-x1)/L;
+            aveCorrelationsPhi1[0][0] += getCPhi1(s1,s1)/correlationCounts[0][0];
+            for( int s2=(i+1); s2<N; s2++ )
+            {  
+              x2 = s2%L;
+              y2 = (s2-x2)/L;
+              dx = getPeriodicDistance(x1,x2);
+              dy = getPeriodicDistance(y1,y2);
+              aveCorrelationsPhi1[dx][dy] += 2*getCPhi1(s1,s2)/correlationCounts[dx][dy];
+            } //for loop over s2
+          } //for loop over s1
+        }
         
         if(currn!=NULL)
         { delete currn; }
@@ -198,11 +261,45 @@ void Simulation::runSim()
       { outFile << avenSq->v_[j] << '\t'; }
       outFile << std::endl;
       
+      if( MEASURE_CORRELATIONS )
+      {
+        outFileCorrelations << L << '\t' << T << '\t' << (i+1);
+        for( int i=0; i<((L/2)+1); i++ )
+        {
+          for( int j=0; j<((L/2)+1); j++ )
+          { outFileCorrelations << '\t' << (aveCorrelationsPhi1[i][j]/measPerBin); }
+        }
+      }
+      
       std::cout << (i+1) << " Bins Complete" << std::endl; 
     } //i (bins)
   }  //closes T loop
   
+  //delete the correlationCounts array:
+  for(uint i=0; i<((L/2)+1); i++)
+  { 
+    if( correlationCounts[i] != NULL )
+    { delete[] correlationCounts[i]; }
+    correlationCounts[i] = NULL; 
+  }
+  if( correlationCounts != NULL )
+  { delete[] correlationCounts; }
+  correlationCounts = NULL;
+  
+  //delete the aveCorrelationsPhi1 array:
+  for(uint i=0; i<((L/2)+1); i++)
+  { 
+    if( aveCorrelationsPhi1[i] != NULL )
+    { delete[] aveCorrelationsPhi1[i]; }
+    aveCorrelationsPhi1[i] = NULL; 
+  }
+  if( aveCorrelationsPhi1 != NULL )
+  { delete[] aveCorrelationsPhi1; }
+  aveCorrelationsPhi1 = NULL;
+  
   outFile.close();
+  if( MEASURE_CORRELATIONS )
+  { outFileCorrelations.close(); }
 }
 
 /************************************** calculateEnergy *************************************/  
@@ -361,8 +458,8 @@ double Simulation::getCorrelation(int i, int j)
   return spins[i]->dot(spins[j]);
 }
 
-/****************************************** getCPhi ******************************************/
-double Simulation::getCPhi(int i, int j)
+/****************************************** getCPhi1 *****************************************/
+double Simulation::getCPhi1(int i, int j)
 {
   return spins[i]->dotForRange(spins[j],2,3);
 }
@@ -401,6 +498,12 @@ double Simulation::getHelicityModulus(int dir)
   return helicityMod;
 }
 
+/************************************ getPeriodicDistance ************************************/
+int Simulation::getPeriodicDistance(int ix, int jx)
+{
+  return std::min( abs(jx-ix), (min(ix,jx)+L-max(ix,jx)) );
+}
+
 /******************************************* getSF *******************************************/
 double Simulation::getSF()
 {
@@ -428,7 +531,7 @@ double Simulation::getSFPhi()
   for( int i=0; i<N; i++ )
   {
     for( int j=0; j<N; j++ )
-    { SFPhi += getCPhi(i,j); }
+    { SFPhi += getCPhi1(i,j); }
   }
   SFPhi /= N;
   
