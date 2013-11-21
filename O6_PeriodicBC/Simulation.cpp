@@ -94,6 +94,7 @@ void Simulation::runSim()
   double            aveE, aveESq;
   double            aveHelicityX, aveHelicityY;
   double            aveM, aveMAbs, aveMSq, aveM4;
+  double            aveMagCDW;
   double**          aveCorrelationsPhi1;
   int**             correlationCounts;
   int               x1,y1;
@@ -170,6 +171,8 @@ void Simulation::runSim()
       avenSq->clear();
       //aveSF = 0;
       //aveSFPhi = 0;
+      
+      aveMagCDW=0;
       if( MEASURE_CORRELATIONS )
       {
         for( int i=0; i<((L/2)+1); i++ )
@@ -211,12 +214,13 @@ void Simulation::runSim()
         avenSq->add(currnSq);
         if( MEASURE_CORRELATIONS )
         {
+          aveMagCDW += sqrt( currnSq->v_[2] + currnSq->v_[3] );
           for( int s1=0; s1<N; s1++ )
           {
             x1 = s1%L;
             y1 = (s1-x1)/L;
             aveCorrelationsPhi1[0][0] += getCPhi1(s1,s1)/correlationCounts[0][0];
-            for( int s2=(i+1); s2<N; s2++ )
+            for( int s2=(s1+1); s2<N; s2++ )
             {  
               x2 = s2%L;
               y2 = (s2-x2)/L;
@@ -263,13 +267,15 @@ void Simulation::runSim()
       
       if( MEASURE_CORRELATIONS )
       {
-        outFileCorrelations << L << '\t' << T << '\t' << (i+1);
-        for( int i=0; i<((L/2)+1); i++ )
+        aveMagCDW = aveMagCDW/measPerBin;
+        outFileCorrelations << L << '\t' << T << '\t' << (i+1) << '\t' << aveMagCDW;
+        for( int j=0; j<((L/2)+1); j++ )
         {
-          for( int j=0; j<((L/2)+1); j++ )
-          { outFileCorrelations << '\t' << (aveCorrelationsPhi1[i][j]/measPerBin); }
-        }
-      }
+          for( int k=0; k<((L/2)+1); k++ )
+          { outFileCorrelations << '\t' << (aveCorrelationsPhi1[j][k]/measPerBin); }
+        } //j
+        outFileCorrelations << std::endl;
+      } //k
       
       std::cout << (i+1) << " Bins Complete" << std::endl; 
     } //i (bins)
@@ -280,7 +286,7 @@ void Simulation::runSim()
   { 
     if( correlationCounts[i] != NULL )
     { delete[] correlationCounts[i]; }
-    correlationCounts[i] = NULL; 
+    correlationCounts[i] = NULL;
   }
   if( correlationCounts != NULL )
   { delete[] correlationCounts; }
