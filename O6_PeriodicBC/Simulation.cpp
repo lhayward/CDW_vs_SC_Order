@@ -268,7 +268,8 @@ void Simulation::runSim()
       if( MEASURE_CORRELATIONS )
       {
         aveMagCDW = aveMagCDW/measPerBin;
-        outFileCorrelations << L << '\t' << T << '\t' << (i+1) << '\t' << aveMagCDW;
+        outFileCorrelations << L << '\t' << T << '\t' << (i+1) << '\t' << aveMagCDW
+                            << '\t' << (avenSq->v_[2] + avenSq->v_[3]);
         for( int j=0; j<((L/2)+1); j++ )
         {
           for( int k=0; k<((L/2)+1); k++ )
@@ -277,7 +278,8 @@ void Simulation::runSim()
         outFileCorrelations << std::endl;
       } //k
       
-      std::cout << (i+1) << " Bins Complete" << std::endl; 
+      if( (i+1)%10==0 )
+      { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //i (bins)
   }  //closes T loop
   

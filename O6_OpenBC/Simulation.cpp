@@ -212,7 +212,8 @@ void Simulation::runSim()
       { outFile << avenSq->v_[j] << '\t'; }
       outFile << std::endl;
       
-      std::cout << (i+1) << " Bins Complete" << std::endl; 
+      if( (i+1)%10==0 )
+      { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //i (bins)
   }  //closes T loop
   
