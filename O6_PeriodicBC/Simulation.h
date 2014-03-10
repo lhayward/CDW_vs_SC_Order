@@ -22,7 +22,7 @@ public:
 private:
   static const bool    MEASURE_CORRELATIONS=true;
   
-  double               J,lambda,g,w,T;
+  double               J,lambda,g,gPrime,w,T;
   double               energy;  //total energy
   double               isingOrderParam;  
   VecND*               mag;     //total magnetization
@@ -62,8 +62,8 @@ private:
   void   wolffStep();
   
 public:
-  Simulation(double J, double lambda, double g, double w, vector<double>* TList, int L,
-             MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, int measPerBin, 
+  Simulation(double J, double lambda, double g, double gPrime, double w, vector<double>* TList,
+             int L, MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, int measPerBin,
              int numBins, const char* outputFileName);
   virtual ~Simulation();
   void    runSim();  
