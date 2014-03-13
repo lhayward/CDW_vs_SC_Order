@@ -18,15 +18,17 @@
 //using namespace std;
 
 /********************************* Simulation (constructor) *********************************/ 
-Simulation::Simulation(double J, double lambda, double g, double w, vector<double>* TList,
-                       int L, MTRand* randomGen, int numWarmUpSweeps, int sweepsPerMeas, 
-                       int measPerBin, int numBins, const char* outputFileName)
+Simulation::Simulation(double J, double lambda, double g, double gPrime, double w, 
+                       vector<double>* TList, int L, MTRand* randomGen, int numWarmUpSweeps, 
+                       int sweepsPerMeas, int measPerBin, int numBins, 
+                       const char* outputFileName)
 {
   spinDim               = 6;
   maxZ                  = 4;
   this->J               = J;
   this->lambda          = lambda;
   this->g               = g;
+  this->gPrime          = gPrime;
   this->w               = w;
   this->TList           = TList;
   this->L               = L;
