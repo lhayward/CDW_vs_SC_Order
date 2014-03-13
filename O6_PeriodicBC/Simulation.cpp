@@ -584,7 +584,6 @@ void Simulation::metropolisStep()
                         - pow(spins[site]->getSquareForRange(2,3),2.0) 
                         - pow(spins[site]->getSquareForRange(4,5),2.0)) );
   
-  std::cout << deltaE << std::endl;
   if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T) )
   { 
     //delete the vector storing the old state of the spin:
