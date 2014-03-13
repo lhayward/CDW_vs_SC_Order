@@ -335,9 +335,13 @@ void Simulation::calculateEnergy()
   energyLambda *= -1*lambda;
   
   for( i=0; i<N; i++ )
-  { sumCDWSqs += spins[i]->getSquareForRange(2,spinDim-1); }
-  energyg = sumCDWSqs*(g + 4.0*(lambda-1.0))/2.0;
-  energygPrime = pow(sumCDWSqs,2.0)*gPrime/2.0;
+  { 
+    sumCDWSqs = spins[i]->getSquareForRange(2,spinDim-1); 
+    energyg += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
+  }
+  energyg *= (g + 4.0*(lambda-1.0))/2.0;
+  energygPrime *= gPrime/2.0;
   
   for( i=0; i<N; i++ )
   { energyw += pow(spins[i]->getSquareForRange(2,3),2.0) 
