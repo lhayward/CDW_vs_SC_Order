@@ -40,8 +40,7 @@ Simulation::Simulation(double J, double lambda, double g, double gPrime, double 
   this->outputFileName  = outputFileName;
   
   spins = new VecND*[N];
-  //for( int i=0; i<N; i++ )
-  //{ spins[i] = getRandomVecND_1(); }
+
   randomizeLattice();
   
   neighbours = new int*[N];
@@ -461,13 +460,15 @@ double Simulation::getClusterOnSiteEnergy()
   for( int i=0; i<clustSize; i++ )
   {
     site = cluster->at(i);
-    sumCDWSqs += spins[site]->getSquareForRange(2,spinDim-1);
+    sumCDWSqs = spins[site]->getSquareForRange(2,spinDim-1);
+    energyg += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
     energyw += pow(spins[site]->getSquareForRange(2,3),2.0) 
                  + pow(spins[site]->getSquareForRange(4,5),2.0);
   } //for loop
   
-  energyg = sumCDWSqs*(g + 4.0*(lambda-1.0))/2.0;
-  energygPrime = pow(sumCDWSqs,2.0)*gPrime/2.0;
+  energyg *= (g + 4.0*(lambda-1.0))/2.0;
+  energygPrime *= gPrime/2.0;
   energyw *= w/2.0;
   
   return J*(energyg + energygPrime + energyw);

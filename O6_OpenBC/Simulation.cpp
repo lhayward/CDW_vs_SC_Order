@@ -46,10 +46,7 @@ Simulation::Simulation(double J, double lambda, double g, double gPrime, double 
                                                //spins on the lattice boundary. The value of 
                                                //this spin is zero so that it does not affect 
                                                //values of observables.
-  //randomizeLattice();
-  
-  for( int i=0; i<N; i++ )
-  { spins[i] = new VecND(spinDim,sqrt(1.0/6.0)); }
+  randomizeLattice();
   
   neighbours = new int*[N];
   for( int i=0; i<N; i++ )
@@ -60,7 +57,6 @@ Simulation::Simulation(double J, double lambda, double g, double gPrime, double 
   setUpNeighbours();
   
   calculateEnergy();
-  std::cout << "energy = " << energy << std::endl;
   mag = new VecND(spinDim,0);
   calculateMagnetization();
   
@@ -261,8 +257,6 @@ void Simulation::calculateEnergy()
   { energyw += pow(spins[i]->getSquareForRange(2,3),2.0) 
                + pow(spins[i]->getSquareForRange(4,5),2.0); }
   energyw *= w/2.0;
-  
-  std::cout << "energygPrime = " << energygPrime << std::endl;
   
   energy = J*(energy1 + energyLambda + energyg + energygPrime + energyw);
 }
