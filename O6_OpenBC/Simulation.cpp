@@ -363,20 +363,26 @@ double Simulation::getClusterOnSiteEnergy()
 {
   int clustSize = (int)cluster->size();
   int site;
+  double sumCDWSqs=0;
   double energyg=0;
+  double energygPrime=0;
   double energyw=0;
   
   for( int i=0; i<clustSize; i++ )
   {
     site = cluster->at(i);
-    energyg += spins[site]->getSquareForRange(2,spinDim-1);
+    sumCDWSqs = spins[site]->getSquareForRange(2,spinDim-1);
+    energyg += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
     energyw += pow(spins[site]->getSquareForRange(2,3),2.0) 
                  + pow(spins[site]->getSquareForRange(4,5),2.0);
   } //for loop
   
   energyg *= (g + 4.0*(lambda-1.0))/2.0;
+  energygPrime *= gPrime/2.0;
   energyw *= w/2.0;
-  return J*(energyg + energyw);
+  
+  return J*(energyg + energygPrime + energyw);
 }
 
 /************************************** getCorrelation ***************************************/
@@ -492,6 +498,8 @@ void Simulation::metropolisStep()
 {
   int site;
   double deltaE;
+  double oldCDWSumSqs;
+  double newCDWSumSqs;
   VecND* sNew = new VecND(spinDim, randomGen);
   VecND* nnSum = new VecND(spinDim,0);
   
@@ -501,11 +509,13 @@ void Simulation::metropolisStep()
   for( int i=0; i<maxZ; i++ )
   { nnSum->add(spins[neighbours[site][i]]); }
   
+  oldCDWSumSqs = spins[site]->getSquareForRange(2,spinDim-1);
+  newCDWSumSqs = sNew->getSquareForRange(2,spinDim-1);
   deltaE = J*( -1*(nnSum->dotForRange(sNew,0,1) - nnSum->dotForRange(spins[site],0,1)) 
                - lambda*(nnSum->dotForRange(sNew,2,spinDim-1) 
                          - nnSum->dotForRange(spins[site],2,spinDim-1)) 
-               + (g + 4*(lambda-1.0))/2.0*(sNew->getSquareForRange(2,spinDim-1) 
-                                          - spins[site]->getSquareForRange(2,spinDim-1)) 
+               + (g + 4*(lambda-1.0))/2.0*(newCDWSumSqs - oldCDWSumSqs)
+               + gPrime/2.0*( pow(newCDWSumSqs,2.0) - pow(oldCDWSumSqs,2.0) )
                + w/2.0*(pow(sNew->getSquareForRange(2,3),2.0) 
                         + pow(sNew->getSquareForRange(4,5),2.0) 
                         - pow(spins[site]->getSquareForRange(2,3),2.0) 
