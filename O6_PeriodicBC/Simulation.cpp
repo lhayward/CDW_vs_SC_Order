@@ -86,8 +86,10 @@ void Simulation::runSim()
 {
   unsigned int      TIndex;
   string            correlationsFileName(outputFileName);
+  string            configsFileName(outputFileName);
   ofstream          outFile;
   ofstream          outFileCorrelations;
+  ofstream          outFileConfigs;
   string            spinFileName;
   //double            currPsiSq;
   VecND*            currn;
@@ -101,6 +103,7 @@ void Simulation::runSim()
   int               x1,y1;
   int               x2,y2;
   int               dx,dy;
+  uint              i_startPrint = 0.99*numBins;
   
   //double            avePsiSq, avePsi4;
   //double            aveSF, aveSFPhi;
@@ -109,7 +112,9 @@ void Simulation::runSim()
   
   outFile.open(outputFileName);
   outFile.precision(20);
+  
   correlationsFileName = "correlations_" + correlationsFileName;
+  configsFileName      = "configs_"      + configsFileName;
   
   correlationCounts   = new int*[(L/2)+1];
   aveCorrelationsPhi1 = new double*[(L/2)+1];
@@ -139,7 +144,12 @@ void Simulation::runSim()
         correlationCounts[ getPeriodicDistance(x1,x2) ][ getPeriodicDistance(y1,y2) ]++;
       }
     }
-  } //if
+  } //if for MEASURE_CORRELATIONS
+  if( PRINT_CONFIGS )
+  {
+    outFileConfigs.open(configsFileName.c_str());
+    outFileConfigs.precision(20);
+  } //if for PRINT_CONFIGS
   
   //loop over all temperatures:
   for(TIndex=0; TIndex<(TList->size()); TIndex++)
@@ -277,7 +287,13 @@ void Simulation::runSim()
           { outFileCorrelations << '\t' << (aveCorrelationsPhi1[j][k]/measPerBin); }
         } //j
         outFileCorrelations << std::endl;
-      } //k
+      } //if
+      
+      if( PRINT_CONFIGS && (i+1)>(i_startPrint) )
+      {
+        outFileConfigs << L << '\t' << T << '\t' << (i+1) << std::endl;
+        printLattice(&outFileConfigs);
+      }
       
       if( (i+1)%10==0 )
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
@@ -309,6 +325,8 @@ void Simulation::runSim()
   outFile.close();
   if( MEASURE_CORRELATIONS )
   { outFileCorrelations.close(); }
+  if( PRINT_CONFIGS )
+  { outFileConfigs.close(); }
 }
 
 /************************************** calculateEnergy *************************************/  
@@ -633,6 +651,18 @@ void Simulation::printLattice()
     spins[i]->print();
   }
   std::cout << std::endl;
+}
+
+/**************************************** printLattice ***************************************/
+void Simulation::printLattice(ofstream* fout)
+{
+  for( int i=0; i<N; i++ )
+  {
+    for( uint j=0; j<spinDim; j++ )
+    { (*fout) << spins[i]->v_[j] << '\t'; }
+    (*fout) << '\n';
+  }
+  (*fout) << std::endl;
 }
 
 /************************************** randomizeLattice *************************************/

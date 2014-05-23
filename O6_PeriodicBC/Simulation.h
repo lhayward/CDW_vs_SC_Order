@@ -20,7 +20,8 @@ public:
   typedef unsigned int  uint;
   
 private:
-  static const bool    MEASURE_CORRELATIONS=true;
+  static const bool    MEASURE_CORRELATIONS=false;
+  static const bool    PRINT_CONFIGS=true;
   
   double               J,lambda,g,gPrime,w,T;
   double               energy;  //total energy
@@ -56,6 +57,7 @@ private:
   //void   printCluster();
   int    getPeriodicDistance(int ix, int iy);
   void   printLattice();
+  void   printLattice(ofstream* fout);
   void   randomizeLattice();
   void   setUpNeighbours();
   void   sweep();
