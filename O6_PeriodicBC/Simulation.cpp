@@ -103,7 +103,8 @@ void Simulation::runSim()
   int               x1,y1;
   int               x2,y2;
   int               dx,dy;
-  uint              i_startPrint = 0.99*numBins;
+  uint              i_startPrint = 0;
+  //uint              i_startPrint = 0.5*numBins;
   
   //double            avePsiSq, avePsi4;
   //double            aveSF, aveSFPhi;
