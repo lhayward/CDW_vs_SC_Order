@@ -93,6 +93,7 @@ void Simulation::runSim()
   string            spinFileName;
   //double            currPsiSq;
   VecND*            currn;
+  VecND*            currnAbs;
   VecND*            currnSq;
   double            aveE, aveESq;
   double            aveHelicityX, aveHelicityY;
@@ -108,8 +109,9 @@ void Simulation::runSim()
   
   //double            avePsiSq, avePsi4;
   //double            aveSF, aveSFPhi;
-  VecND* aven   = new VecND(spinDim,0);
-  VecND* avenSq = new VecND(spinDim,0);
+  VecND* aven    = new VecND(spinDim,0);
+  VecND* avenAbs = new VecND(spinDim,0);
+  VecND* avenSq  = new VecND(spinDim,0);
   
   outFile.open(outputFileName);
   outFile.precision(20);
@@ -181,6 +183,7 @@ void Simulation::runSim()
       //avePsiSq=0;
       //avePsi4=0;
       aven->clear();
+      avenAbs->clear();
       avenSq->clear();
       //aveSF = 0;
       //aveSFPhi = 0;
@@ -208,6 +211,7 @@ void Simulation::runSim()
         calculateIsingOrder();
         
         currn = mag->getMultiple(1.0/N);
+        currnAbs = currn->getAbsComponents();
         currnSq = mag->getSqComponents();
         currnSq->multiply(1.0/(N*N));
         
@@ -224,6 +228,7 @@ void Simulation::runSim()
         //avePsiSq     += currPsiSq;
         //avePsi4      += pow(currPsiSq,2);
         aven->add(currn);
+        avenAbs->add(currnAbs);
         avenSq->add(currnSq);
         if( MEASURE_CORRELATIONS )
         {
@@ -248,6 +253,10 @@ void Simulation::runSim()
         { delete currn; }
         currn = NULL;
         
+        if(currnAbs!=NULL)
+        { delete currnAbs; }
+        currnAbs=NULL;
+        
         if(currnSq!=NULL)
         { delete currnSq; }
         currnSq=NULL;
@@ -267,6 +276,7 @@ void Simulation::runSim()
       //avePsiSq     = avePsiSq/measPerBin;
       //avePsi4      = avePsi4/measPerBin;
       aven->multiply(1.0/measPerBin);
+      avenAbs->multiply(1.0/measPerBin);
       avenSq->multiply(1.0/measPerBin);
       
       outFile << L << '\t' << T << '\t' << (i+1) << '\t' << aveE << '\t' << aveESq << '\t'
@@ -282,7 +292,8 @@ void Simulation::runSim()
       {
         aveMagCDW = aveMagCDW/measPerBin;
         outFileCorrelations << L << '\t' << T << '\t' << (i+1) << '\t' << aveMagCDW
-                            << '\t' << (avenSq->v_[2] + avenSq->v_[3]);
+                            << '\t' << (avenSq->v_[2] + avenSq->v_[3])
+                            << '\t' << avenAbs->v_[2] << '\t' << avenAbs->v_[3];
         for( int j=0; j<((L/2)+1); j++ )
         {
           for( int k=0; k<((L/2)+1); k++ )
