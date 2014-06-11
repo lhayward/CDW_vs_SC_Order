@@ -32,6 +32,7 @@ class VecND
     void   clear();
     double dot(VecND* vec2);
     double dotForRange(VecND* vec2, uint start, uint end);
+    VecND* getAbsComponents();
     VecND* getMultiple(double c);
     VecND* getReflection(VecND* r);
     double getSquare();

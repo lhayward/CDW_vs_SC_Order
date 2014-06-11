@@ -151,6 +151,17 @@ double VecND::dotForRange(VecND* vec2, uint start, uint end)
   return result;
 }
 
+/************************************** getAbsComponents *************************************/
+VecND* VecND::getAbsComponents()
+{
+  VecND* result = new VecND(N_,0);
+  
+  for( uint i=0; i<N_; i++ )
+  { result->v_[i] = abs(v_[i]); }
+  
+  return result;
+}
+
 /**************************************** getMultiple ****************************************/
 VecND* VecND::getMultiple(double c)
 {
