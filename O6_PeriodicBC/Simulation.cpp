@@ -163,8 +163,9 @@ void Simulation::runSim()
     
     //take out the following two lines if you want the system to use its previous state from 
     //the last temperature (i.e. cooling the system):
-    if( TIndex==0 )
-    { randomizeLattice(); }
+    randomizeLattice();
+    //if( TIndex==0 )
+    //{ randomizeLattice(); }
     
     //do warm-up sweeps:
     for( int i=0; i<numWarmUpSweeps; i++ )
@@ -312,6 +313,19 @@ void Simulation::runSim()
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //i (bins)
   }  //closes T loop
+  
+  //delete the averages VecND objects:
+  if(aven!=NULL)
+  { delete aven; }
+  aven = NULL;
+  
+  if(avenAbs!=NULL)
+  { delete avenAbs; }
+  avenAbs=NULL;
+  
+  if(avenSq!=NULL)
+  { delete avenSq; }
+  avenSq=NULL;
   
   //delete the correlationCounts array:
   for(uint i=0; i<((L/2)+1); i++)
