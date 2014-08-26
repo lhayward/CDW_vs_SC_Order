@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     
   //variables related to input/output data from/to files:
   std::string fileSuffix      = getFileSuffix( argc, argv );
-  std::string paramFileName   = "input" + fileSuffix + ".txt";
+  std::string paramFileName   = "params" + fileSuffix + ".txt";
   std::string simParamStr     = "SIMULATION PARAMETERS";
   std::string latticeParamStr = "LATTICE PARAMETERS";
   std::string modelParamStr   = "MODEL PARAMETERS";
@@ -55,48 +55,45 @@ int main(int argc, char** argv)
   params = new SimParameters(paramFileName, simParamStr);
   params->print();
   
-  if( params->isValid() )
-  {
-    lattice = readLattice(params->latticeType_, paramFileName, latticeParamStr);
-    lattice->printParams();
+  lattice = readLattice(params->latticeType_, paramFileName, latticeParamStr);
+  lattice->printParams();
+
+  model = readModel(params->modelName_, paramFileName, modelParamStr, outFileName, lattice);
+  model->printParams();
   
-    model = readModel(params->modelName_, paramFileName, modelParamStr, outFileName, lattice);
-    model->printParams();
+  std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
+  //loop over the different temperatures:
+  for( uint TIndex=0; TIndex<(params->TList_->size()); TIndex++)
+  {
+    T = params->TList_->at(TIndex);
+    std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
+              << std::endl;
+    model->setT(T);
+    model->randomize( params->randomGen_ );
     
-    std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
-    //loop over the different temperatures:
-    for( uint TIndex=0; TIndex<(params->TList_->size()); TIndex++)
+    //equilibrate:
+    for( uint i=0; i<params->numWarmUpSweeps_; i++ )
+    { model->sweep( params->randomGen_ ); }
+    
+    //loop over Monte Carlo bins:
+    for( uint i=0; i<params->numBins_; i++ )
     {
-      T = params->TList_->at(TIndex);
-      std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
-                << std::endl;
-      model->setT(T);
-      model->randomize( params->randomGen_ );
-      
-      //equilibrate:
-      for( uint i=0; i<params->numWarmUpSweeps_; i++ )
-      { model->sweep( params->randomGen_ ); }
-      
-      //loop over Monte Carlo bins:
-      for( uint i=0; i<params->numBins_; i++ )
+      model->zeroMeasurements();
+      //perform the measurements for one bin:
+      for( uint j=0; j<params->measPerBin_; j++ )
       {
-        model->zeroMeasurements();
-        //perform the measurements for one bin:
-        for( uint j=0; j<params->measPerBin_; j++ )
-        {
-          //perform the sweeps for one measurement:
-          for( uint k=0; k<params->sweepsPerMeas_; k++ )
-          { model->sweep( params->randomGen_ ); }
-          model->makeMeasurement();
-        } //loop over measurements
-        model->writeBin((i+1), params->measPerBin_);
-        
-        if( (i+1)%100==0 )
-        { std::cout << (i+1) << " Bins Complete" << std::endl; }
-      } //loop over bins
-      std::cout << std::endl;
-    } //temperature loop
-  }
+        //perform the sweeps for one measurement:
+        for( uint k=0; k<params->sweepsPerMeas_; k++ )
+        { model->sweep( params->randomGen_ ); }
+        model->makeMeasurement();
+      } //loop over measurements
+      model->writeBin((i+1), params->measPerBin_);
+      
+      if( (i+1)%100==0 )
+      { std::cout << (i+1) << " Bins Complete" << std::endl; }
+    } //loop over bins
+    std::cout << std::endl;
+  } //temperature loop
   
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
@@ -137,10 +134,11 @@ Model* readModel(std::string modelName, std::string inFileName, std::string star
   if( fin.is_open() )
   { FileReading::readUntilFound(&fin, startStr); }
   
-  if( modelName == "isingmodel" )
-  { result = new IsingModel(&fin, outFileName, lattice); }
-  else if( modelName == "toriccode" )
-  { result = new ToricCode_1_q(&fin, outFileName, lattice); }
+  if( modelName == "o6" )
+  { 
+    std::cout << "O6 Model Simulation" << std::endl;
+    //result = new IsingModel(&fin, outFileName, lattice); 
+  }
   else
   {
     std::cout << "ERROR in readModel(std::string modelName, std::string inFileName, "
