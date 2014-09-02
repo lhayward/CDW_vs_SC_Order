@@ -59,7 +59,7 @@ int main(int argc, char** argv)
   lattice->printParams();
 
   model = readModel(params->modelName_, paramFileName, modelParamStr, outFileName, lattice);
-  model->printParams();
+  /*model->printParams();
   
   std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
   //loop over the different temperatures:
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //loop over bins
     std::cout << std::endl;
-  } //temperature loop
+  } //temperature loop */
   
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;

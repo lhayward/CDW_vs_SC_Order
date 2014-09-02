@@ -19,8 +19,6 @@ Lattice::Lattice(uint L)
   L_ = L;
   N_ = 0;
   neighbours_ = NULL;
-  isValid_ = false; //must be a member of one of the child classes and have the neighbours
-                    //array not NULL to be a valid Lattice object
 }
 
 /************** Lattice(std::ifstream* fin, std::string fileName) (constructor) **************/
@@ -39,8 +37,6 @@ Lattice::Lattice(std::ifstream* fin, std::string fileName)
   
   N_ = 0;
   neighbours_ = NULL;
-  isValid_ = false; //must be a member of one of the child classes and have the neighbours
-                    //array not NULL to be a valid Lattice object
 }
 
 /********************************** ~Lattice() (destructor) **********************************/
@@ -56,7 +52,6 @@ Lattice::~Lattice()
 }
 
 /*********************************** Public Getter Methods: **********************************/
-bool Lattice::isValid(){ return isValid_; }
 uint Lattice::getL()   { return L_; }
 uint Lattice::getN()   { return N_; }
 uint Lattice::getZ()   { return z_; }

@@ -17,7 +17,6 @@ class Lattice
     typedef unsigned int  uint;
   
   protected: 
-    bool isValid_; //whether or not this is a valid Lattice object
     uint   L_; //linear size of lattice
     uint   N_; //total number of lattice sites
     uint   z_; //number of nearest neighbouring sites for each site

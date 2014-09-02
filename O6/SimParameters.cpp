@@ -90,8 +90,3 @@ void SimParameters::print()
   
 } //print method
 
-/***************************************** isValid() ******************************************
-* Public getter methods for the isValid_ parameter
-**********************************************************************************************/
-bool SimParameters::isValid()      
-{ return isValid_; }
