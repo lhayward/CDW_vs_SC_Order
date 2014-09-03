@@ -20,14 +20,8 @@ class Model
     typedef unsigned int  uint;
     
   protected:
-    bool          isValid_; //whether or not this is a valid Model object
     double        J_;       //coupling 
-    uint          alpha_;   //the number of replicas
-    //double        fracA_;   //the fractions of spins in region A (only relevant for alpha_>=2)
-    std::string   regionAInputStr_;
-    std::string   regionAOutputStr_;
     double        T_;       //current temperature
-    bool*         regionA_; //indicates whether or not each spin is in region A
     double        energy_;  //current energy
     Measure       measures;
     std::ofstream fout;
