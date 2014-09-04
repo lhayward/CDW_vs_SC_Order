@@ -20,6 +20,7 @@
 #include "MersenneTwister.h"
 #include "Lattice.h"
 #include "Model.h"
+#include "O6_Model.h"
 #include "SimParameters.h"
 
 typedef unsigned long ulong;
@@ -59,7 +60,7 @@ int main(int argc, char** argv)
   lattice->printParams();
 
   model = readModel(params->modelName_, paramFileName, modelParamStr, outFileName, lattice);
-  /*model->printParams();
+  model->printParams();
   
   std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
   //loop over the different temperatures:
@@ -93,7 +94,7 @@ int main(int argc, char** argv)
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //loop over bins
     std::cout << std::endl;
-  } //temperature loop */
+  } //temperature loop 
   
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
@@ -136,8 +137,7 @@ Model* readModel(std::string modelName, std::string inFileName, std::string star
   
   if( modelName == "o6" )
   { 
-    std::cout << "O6 Model Simulation" << std::endl;
-    //result = new IsingModel(&fin, outFileName, lattice); 
+    result = new O6_Model(&fin, outFileName, lattice); 
   }
   else
   {

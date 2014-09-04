@@ -1,9 +1,9 @@
 CC = c++ -Wall -funroll-loops #-pg #-xHOST # -O3
 
 PROG = o6
-HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h SimParameters.h
-SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp SimParameters.cpp
-OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o SimParameters.o
+HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h
+SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp O6_Model.cpp SimParameters.cpp
+OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o
 
 $(PROG): $(OBJS)
 	$(CC) $(OBJS) -o $(PROG)
@@ -22,6 +22,9 @@ Measure.o: Measure.cpp $(HDRS)
 	
 Model.o: Model.cpp $(HDRS)
 	$(CC) -c Model.cpp -o Model.o
+	
+O6_Model.o: O6_Model.cpp $(HDRS)
+	$(CC) -c O6_Model.cpp -o O6_Model.o
 	
 SimParameters.o: SimParameters.cpp $(HDRS)
 	$(CC) -c SimParameters.cpp -o SimParameters.o

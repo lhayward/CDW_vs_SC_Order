@@ -40,7 +40,6 @@ class Model
     
     //pure virtual methods (to be implemented by all child classes):
     virtual void makeMeasurement() = 0;
-    virtual void printRegionA   () = 0;
     virtual void printSpins     () = 0;
     virtual void randomize      (MTRand* randomGen) = 0;
     virtual void sweep          (MTRand* randomGen) = 0;
