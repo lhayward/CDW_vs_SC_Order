@@ -98,7 +98,6 @@ int main(int argc, char** argv)
     std::cout << "OUTFILE = " << outFileName<< std::endl;
     sim = new Simulation(J, lambda, g, gPrime, w, TList, L, randomGen, numWarmUpSweeps, 
                          sweepsPerMeas, measPerBin, numBins, outFileName.c_str());
-
     sec1 = time (NULL);
     sim->runSim();
     sec2 = time(NULL);
@@ -108,6 +107,7 @@ int main(int argc, char** argv)
     { delete sim; }
     sim = NULL;
   }
+  
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
 } //closes main
