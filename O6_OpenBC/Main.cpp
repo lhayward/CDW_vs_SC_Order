@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     { delete sim; }
     sim = NULL;
   }
-  std::cout << "Num VecNDs = " << VecND::numVecND << std::endl;
+  
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
 } //closes main

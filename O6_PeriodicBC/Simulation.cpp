@@ -164,7 +164,6 @@ void Simulation::runSim()
     //take out the following two lines if you want the system to use its previous state from 
     //the last temperature (i.e. cooling the system):
     randomizeLattice();
-    
     //if( TIndex==0 )
     //{ randomizeLattice(); }
     

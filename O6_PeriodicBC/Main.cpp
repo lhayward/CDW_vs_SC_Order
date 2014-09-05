@@ -32,7 +32,7 @@ void   readDoubleList(vector<double>* list, ifstream* in, char delim, char start
 int    readInt       (ifstream* in, char delim); 
 ulong  readLongInt   (ifstream* in, char delim);
 
-int VecND::numVec = 0;  //variable to check for memory leaks
+int VecND::numVecND = 0;  //variable to check for memory leaks
 
 /*********************************************************************************************
 ******************************************** main ********************************************
