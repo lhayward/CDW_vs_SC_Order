@@ -41,7 +41,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
         L_  = hcube_->getL();
         N_  = hcube_->getN();
       
-        //spins_ = new IsingSpins(alpha_, N1_);
+        spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
       }
       else
       {
@@ -93,7 +93,7 @@ void O6_Model::makeMeasurement()
 void O6_Model::printParams()
 {
   std::cout << "O(6) Model Parameters:\n"
-            << "---------------------------" << std::endl;
+            << "---------------------" << std::endl;
   Model::printParams();
   std::cout << "  lambda = " << lambda_ << "\n"
             << "       g = " << g_      << "\n"

@@ -11,8 +11,8 @@
 
 #include <string>
 #include "Hypercube.h"
-//#include "IsingSpins.h"
 #include "Model.h"
+#include "VectorSpins.h"
 
 class O6_Model : public Model
 { 
@@ -20,6 +20,8 @@ class O6_Model : public Model
     typedef unsigned int  uint;
     
   private:
+    static const int VECTOR_SPIN_DIM = 6; //dimensionality of the spins on the lattice
+    
     double  lambda_;  //helicity modulus for spatial variations of the CDW order
     double  g_;       //anisotropy in the energy between the CDW and SC directions
     double  gPrime_;  //quartic anisotropy
@@ -29,8 +31,8 @@ class O6_Model : public Model
     uint    L_;       //hypercube linear length
     uint    N_;       //number of spins living on the hypercube   
     
-    Hypercube*  hcube_; //the hypercubic lattice on which the d.o.f. live
-    //IsingSpins* spins_; //the degrees of freedom (d.o.f.) for the model
+    Hypercube*  hcube_;  //the hypercubic lattice on which the d.o.f. live
+    VectorSpins* spins_; //the degrees of freedom (d.o.f.) for the model
     
     void   localUpdate       (MTRand* randomGen);
     uint   uintPower(uint base, uint exp);

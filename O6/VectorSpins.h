@@ -1,0 +1,34 @@
+/**********************************************************************************************
+************************************ O(6) MODEL MONTE CODE ************************************
+***********************************************************************************************
+* Lauren E. Hayward Sierens
+***********************************************************************************************
+* File:   VectorSpins.h
+**********************************************************************************************/
+
+#ifndef VECTOR_SPINS_H
+#define VECTOR_SPINS_H
+
+#include "MersenneTwister.h"
+#include "Vector_NDim.h"
+
+class VectorSpins 
+{
+  public:
+    typedef unsigned int uint;
+  
+  protected:
+    uint          N_;       //number of spins per replica
+    uint          spinDim_; //dimensionality of each vector
+    Vector_NDim** spins_;   //array of the vector spin degrees of freedom
+    
+  public:
+    VectorSpins(uint N, uint spinDim);
+    virtual ~VectorSpins();
+    
+    Vector_NDim* getSpin(int i);
+    void print();
+    void randomize(MTRand* randomGen);
+};
+
+#endif  // VECTOR_SPINS_H

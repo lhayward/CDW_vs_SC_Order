@@ -5,12 +5,11 @@
 ***********************************************************************************************
 * File:   Vector_NDim.cpp
 **********************************************************************************************/
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include "Vector_NDim.h"
-
-using namespace std;
 
 /********************************* Vector_NDim (constructor) *********************************/
 Vector_NDim::Vector_NDim(uint N, Vector_NDim* oldVec)
@@ -104,7 +103,9 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
 /********************************* ~Vector_NDim (destructor) *********************************/
 Vector_NDim::~Vector_NDim()
 {
-  delete[] v_;
+  if( v_ != NULL )
+  { delete[] v_; }
+  v_ = NULL;
 }
 
 /******************************************** add ********************************************/
@@ -239,10 +240,10 @@ void Vector_NDim::normalize()
 /******************************************* print *******************************************/
 void Vector_NDim::print()
 {
-  cout << "[ "; 
+  std::cout << "[ "; 
   for( uint i=0; i<(N_-1); i++ )
-  { cout << v_[i] << " , "; }
-  cout << v_[N_-1] << " ]" << endl;
+  { std::cout << v_[i] << " , "; }
+  std::cout << v_[N_-1] << " ]" << std::endl;
 }
 
 /************************************ reflectAndNormalize ************************************/

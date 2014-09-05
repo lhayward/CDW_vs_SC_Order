@@ -1,9 +1,9 @@
 CC = c++ -Wall -funroll-loops #-pg #-xHOST # -O3
 
 PROG = o6
-HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h
-SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp O6_Model.cpp SimParameters.cpp Vector_NDim.cpp
-OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o Vector_NDim.o
+HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h VectorSpins.h
+SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp O6_Model.cpp SimParameters.cpp Vector_NDim.cpp VectorSpins.cpp
+OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o Vector_NDim.o VectorSpins.o
 
 $(PROG): $(OBJS)
 	$(CC) $(OBJS) -o $(PROG)
@@ -29,8 +29,11 @@ O6_Model.o: O6_Model.cpp $(HDRS)
 SimParameters.o: SimParameters.cpp $(HDRS)
 	$(CC) -c SimParameters.cpp -o SimParameters.o
 	
-	Vector_NDim.o: Vector_NDim.cpp $(HDRS)
+Vector_NDim.o: Vector_NDim.cpp $(HDRS)
 	$(CC) -c Vector_NDim.cpp -o Vector_NDim.o
+	
+VectorSpins.o: VectorSpins.cpp $(HDRS)
+	$(CC) -c VectorSpins.cpp -o VectorSpins.o
 	
 Main.o: Main.cpp $(HDRS)
 	$(CC) -c Main.cpp -o Main.o 

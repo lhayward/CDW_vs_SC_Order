@@ -11,8 +11,6 @@
 
 #include "MersenneTwister.h"
 
-using namespace std;
-
 class Vector_NDim 
 {
   private:
