@@ -16,9 +16,11 @@
 //typdef needed because uint is a return types:
 typedef O6_Model::uint uint;
 
-/********** O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice) ***********
-**************************************** (constructor) ***************************************/
-O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice)
+/***************** O6_Model(std::ifstream* fin, std::string outFileName, ... ******************
+******************          Lattice* lattice, MTRand* randomGen)             ******************
+******************                       (constructor)                       *****************/
+O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice,
+                   MTRand* randomGen)
   : Model(fin, outFileName)
 {
   const char EQUALS_CHAR = '=';
@@ -38,10 +40,23 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
       if(hcube_)
       {
         D_  = hcube_->getD();
-        L_  = hcube_->getL();
-        N_  = hcube_->getN();
+        
+        if( D_==2 || D_==3 )
+        {
+          L_  = hcube_->getL();
+          N_  = hcube_->getN();
       
-        spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
+          spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
+          randomizeLattice(randomGen);
+          
+          updateEnergy();
+        }
+        else
+        {
+          std::cout << "ERROR in O6_Model constructor:\n" 
+                    << "  The Hypercube lattice must have dimension 2 or 3." 
+                    << std::endl;
+        }
       }
       else
       {
@@ -66,10 +81,10 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
 /******************************* ~O6_Model() (destructor) *******************************/
 O6_Model::~O6_Model()
 {
-  //delete the IsingSpins object:
-  /*if( spins_ != NULL )
+  //delete the VectorSpins object:
+  if( spins_ != NULL )
   { delete spins_; }
-  spins_ = NULL;*/
+  spins_ = NULL;
 }
 
 /******************************* localUpdate(MTRand* randomGen) ******************************/
@@ -104,15 +119,11 @@ void O6_Model::printParams()
 
 /**************************************** printSpins() ***************************************/
 void O6_Model::printSpins()
-{ 
-  //spins_->print(); 
-}
+{ spins_->print(); }
 
-/******************************** randomize(MTRand* randomGen) *******************************/
-void O6_Model::randomize(MTRand* randomGen)
-{
-  //spins_->randomize(randomGen, regionA_);
-}
+/**************************** randomizeLattice(MTRand* randomGen) ****************************/
+void O6_Model::randomizeLattice(MTRand* randomGen)
+{ spins_->randomize(randomGen); }
 
 /************************************* setT(double newT) *************************************/
 void O6_Model::setT(double newT)
@@ -140,8 +151,48 @@ uint O6_Model::uintPower(uint base, uint exp)
 /*************************************** updateEnergy() **************************************/
 void O6_Model::updateEnergy()
 {
+  Vector_NDim* currSpin;
+  Vector_NDim* neighbour_x;
+  Vector_NDim* neighbour_y;
+  double       sumCDWSqs    = 0;
+  double       energy1      = 0;
+  double       energyLambda = 0;
+  double       energyg      = 0;
+  double       energygPrime = 0;
+  double       energyw      = 0;
+  
   energy_=0;
-  energy_ *= -J_;
+  
+  for( uint i=0; i<N_; i++ )
+  { 
+    currSpin    = spins_->getSpin(i);
+    neighbour_x = spins_->getSpin( hcube_->getNeighbour(i,0) );
+    neighbour_y = spins_->getSpin( hcube_->getNeighbour(i,1) );
+    
+    energy1 += currSpin->dotForRange( neighbour_x, 0, 1 ) 
+               + currSpin->dotForRange( neighbour_y, 0, 1 ); 
+    
+    energyLambda += currSpin->dotForRange( neighbour_x, 2, VECTOR_SPIN_DIM-1 ) 
+                    + currSpin->dotForRange( neighbour_y, 2, VECTOR_SPIN_DIM-1 );
+  }
+  energy1 *= -1;
+  energyLambda *= -1*lambda_;
+  
+  for( uint i=0; i<N_; i++ )
+  { 
+    sumCDWSqs = spins_->getSpin(i)->getSquareForRange(2,VECTOR_SPIN_DIM-1); 
+    energyg += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
+  }
+  energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
+  energygPrime *= gPrime_/2.0;
+  
+  for( uint i=0; i<N_; i++ )
+  { energyw += pow( spins_->getSpin(i)->getSquareForRange(2,3), 2.0 ) 
+               + pow( spins_->getSpin(i)->getSquareForRange(4,5), 2.0 ); }
+  energyw *= w_/2.0;
+  
+  energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw);
 }
 
 /***************************** writeBin(int binNum, int numMeas) *****************************/

@@ -17,8 +17,8 @@ class VectorSpins
   public:
     typedef unsigned int uint;
   
-  protected:
-    uint          N_;       //number of spins per replica
+  private:
+    uint          N_;       //number of spins
     uint          spinDim_; //dimensionality of each vector
     Vector_NDim** spins_;   //array of the vector spin degrees of freedom
     

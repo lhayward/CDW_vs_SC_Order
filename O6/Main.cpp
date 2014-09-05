@@ -29,7 +29,7 @@ typedef unsigned int  uint;
 std::string getFileSuffix(int argc, char** argv);
 Lattice* readLattice(std::string latticeName, std::string fileName, std::string startStr);
 Model* readModel(std::string modelName, std::string inFileName, std::string startStr, 
-                 std::string outFileName, Lattice* lattice);
+                 std::string outFileName, Lattice* lattice, MTRand* randomGen);
 
 /**********************************************************************************************
 ******************************************** main *********************************************
@@ -53,13 +53,14 @@ int main(int argc, char** argv)
   std::cout.precision(8);
   std::cout << "\nParameter File: " << paramFileName << "\n" << std::endl;
   
-  params = new SimParameters(paramFileName, simParamStr);
+  params = new SimParameters( paramFileName, simParamStr );
   params->print();
   
-  lattice = readLattice(params->latticeType_, paramFileName, latticeParamStr);
+  lattice = readLattice( params->latticeType_, paramFileName, latticeParamStr );
   lattice->printParams();
 
-  model = readModel(params->modelName_, paramFileName, modelParamStr, outFileName, lattice);
+  model = readModel( params->modelName_, paramFileName, modelParamStr, outFileName, lattice,
+                     params->randomGen_ );
   model->printParams();
   
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
               << std::endl;
     model->setT(T);
-    model->randomize( params->randomGen_ );
+    model->randomizeLattice( params->randomGen_ );
     
     //equilibrate:
     for( uint i=0; i<params->numWarmUpSweeps_; i++ )
@@ -123,10 +124,11 @@ Lattice* readLattice(std::string latticeName, std::string fileName, std::string 
   return new Hypercube(&fin, fileName);
 }
 
-/********* readModel(std::string modelName, std::string inFileName, ...               *********
-**********           std::string startStr, std::string outFileName, Lattice* lattice) ********/
+/**************** readModel(std::string modelName, std::string inFileName, ... ****************
+*****************           std::string startStr, std::string outFileName,     ****************
+*****************           Lattice* lattice, MTRand* randomGen)               ***************/
 Model* readModel(std::string modelName, std::string inFileName, std::string startStr, 
-                 std::string outFileName, Lattice* lattice)
+                 std::string outFileName, Lattice* lattice, MTRand* randomGen )
 {
   Model* result=NULL;
   std::ifstream fin;
@@ -137,7 +139,7 @@ Model* readModel(std::string modelName, std::string inFileName, std::string star
   
   if( modelName == "o6" )
   { 
-    result = new O6_Model(&fin, outFileName, lattice); 
+    result = new O6_Model(&fin, outFileName, lattice, randomGen); 
   }
   else
   {
