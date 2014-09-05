@@ -50,6 +50,8 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           randomizeLattice(randomGen);
           
           updateEnergy();
+          mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0);
+          updateMagnetization();
         }
         else
         {
@@ -193,6 +195,15 @@ void O6_Model::updateEnergy()
   energyw *= w_/2.0;
   
   energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw);
+}
+
+/*********************************** updateMagnetization() ***********************************/
+void O6_Model::updateMagnetization()
+{
+  mag_->clear();
+  
+  for( uint i=0; i<N_; i++ )
+  { mag_->add( spins_->getSpin(i) ); }
 }
 
 /***************************** writeBin(int binNum, int numMeas) *****************************/
