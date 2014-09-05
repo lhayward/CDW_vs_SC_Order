@@ -19,6 +19,8 @@ class VecND
   public:
     typedef unsigned int  uint;
     
+    static int numVecND;
+    
     uint    N_;  //dimensionality of the vector
     double* v_;  //components of the ND vector
   

@@ -71,7 +71,7 @@ Simulation::Simulation(double J, double lambda, double g, double gPrime, double 
 /********************************* ~Simulation (destructor) *********************************/
 Simulation::~Simulation()
 {
-  for( int i=0; i<N; i++ )
+  for( int i=0; i<(N+1); i++ )
   { delete spins[i]; }
   delete[] spins;
   
@@ -218,6 +218,15 @@ void Simulation::runSim()
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //i (bins)
   }  //closes T loop
+  
+  //delete the averages VecND objects:
+  if(aven!=NULL)
+  { delete aven; }
+  aven = NULL;
+  
+  if(avenSq!=NULL)
+  { delete avenSq; }
+  avenSq=NULL;
   
   outFile.close();
 }
@@ -592,7 +601,14 @@ void Simulation::printNeighbours()
 void Simulation::randomizeLattice()
 {
   for( int i=0; i<N; i++ )
-  { spins[i] = new VecND(spinDim,randomGen); }
+  { 
+    //if there is already a VecND object in this location, then delete it first to
+    //avoid memory leaks:
+    if( spins[i] != NULL )
+    { delete spins[i]; }
+    
+    spins[i] = new VecND(spinDim,randomGen); 
+  }
 }
 
 /************************************** setUpNeighbours **************************************
