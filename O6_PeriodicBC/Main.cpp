@@ -16,6 +16,7 @@
 #include <sstream>
 #include "MersenneTwister.h"
 #include "Simulation.h"
+#include "VecND.h"
 
 //using namespace std;
 
@@ -30,6 +31,8 @@ double readDouble    (ifstream* in, char delim);
 void   readDoubleList(vector<double>* list, ifstream* in, char delim, char startChar, char endChar);
 int    readInt       (ifstream* in, char delim); 
 ulong  readLongInt   (ifstream* in, char delim);
+
+int VecND::numVec = 0;  //variable to check for memory leaks
 
 /*********************************************************************************************
 ******************************************** main ********************************************
@@ -95,6 +98,7 @@ int main(int argc, char** argv)
     std::cout << "OUTFILE = " << outFileName<< std::endl;
     sim = new Simulation(J, lambda, g, gPrime, w, TList, L, randomGen, numWarmUpSweeps, 
                          sweepsPerMeas, measPerBin, numBins, outFileName.c_str());
+
     sec1 = time (NULL);
     sim->runSim();
     sec2 = time(NULL);
@@ -104,7 +108,6 @@ int main(int argc, char** argv)
     { delete sim; }
     sim = NULL;
   }
-
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
 } //closes main

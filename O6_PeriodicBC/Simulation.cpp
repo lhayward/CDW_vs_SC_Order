@@ -164,6 +164,7 @@ void Simulation::runSim()
     //take out the following two lines if you want the system to use its previous state from 
     //the last temperature (i.e. cooling the system):
     randomizeLattice();
+    
     //if( TIndex==0 )
     //{ randomizeLattice(); }
     
@@ -696,7 +697,14 @@ void Simulation::printLattice(ofstream* fout)
 void Simulation::randomizeLattice()
 {
   for( int i=0; i<N; i++ )
-  { spins[i] = new VecND(spinDim,randomGen); }
+  { 
+    //if there is already a VecND object in this location, then delete it first to
+    //avoid memory leaks:
+    if( spins[i] != NULL )
+    { delete spins[i]; }
+      
+    spins[i] = new VecND(spinDim,randomGen); 
+  }
 }
 
 /************************************** setUpNeighbours **************************************

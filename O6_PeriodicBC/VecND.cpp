@@ -20,6 +20,7 @@ VecND::VecND(uint N, VecND* oldVec)
   
   for( uint i=0; i<N_; i++)
   { v_[i] = oldVec->v_[i]; }
+  numVec++;
 }
 
 /************************************ VecND (constructor) ***********************************/  
@@ -30,6 +31,7 @@ VecND::VecND(uint N, double val)
   
   for( uint i=0; i<N_; i++ )
   { v_[i] = val; }
+  numVec++;
 }
 
 /************************************ VecND (constructor) ***********************************/  
@@ -40,6 +42,7 @@ VecND::VecND(uint N, int val)
   
   for( uint i=0; i<N_; i++ )
   { v_[i] = val; }
+  numVec++;
 }
 
 /************************************ VecND (constructor) *************************************
@@ -100,12 +103,14 @@ VecND::VecND(uint N, MTRand* randomGen)
   
   for( uint i=0; i<N_; i++ )
   { v_[i] = v_[i]/S; }
+  numVec++;
 }
 
 /************************************ ~VecND (destructor) ***********************************/ 
 VecND::~VecND()
 {
   delete[] v_;
+  numVec--;
 }
 
 /******************************************** add *******************************************/ 
