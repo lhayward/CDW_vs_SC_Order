@@ -87,6 +87,10 @@ O6_Model::~O6_Model()
   if( spins_ != NULL )
   { delete spins_; }
   spins_ = NULL;
+  
+  if( mag_ != NULL )
+  { delete mag_; }
+  mag_ = NULL;
 }
 
 /******************************* localUpdate(MTRand* randomGen) ******************************/
