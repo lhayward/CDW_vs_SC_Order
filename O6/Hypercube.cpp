@@ -17,7 +17,7 @@ typedef Hypercube::uint uint;
 
 /*************************** Hypercube(int L, int D) (constructor) ***************************/
 Hypercube::Hypercube(uint L, uint D)
-  : Lattice(L)
+  : Lattice()
 {
   D_ = D;
   z_ = 2*D;
@@ -26,13 +26,16 @@ Hypercube::Hypercube(uint L, uint D)
 
 /************* Hypercube(std::ifstream* fin, std::string fileName) (constructor) *************/
 Hypercube::Hypercube(std::ifstream* fin, std::string fileName)
-  : Lattice(fin, fileName)
+  : Lattice()
 {
   const char EQUALS_CHAR = '=';
   
   //read in D from the file:
   if( fin!=NULL && fin->is_open() )
-  { D_ = FileReading::readUint(fin, EQUALS_CHAR); }
+  { 
+    D_ = FileReading::readUint(fin, EQUALS_CHAR); 
+    L_ = FileReading::readUint(fin, EQUALS_CHAR);
+  }
   else
   {
     std::cout << "ERROR in Hypercube constructor: could not read from file \"" << fileName 
@@ -172,3 +175,4 @@ uint Hypercube::uintPower(uint base, uint exp)
 
 /*********************************** Public Getter Methods: **********************************/
 uint Hypercube::getD(){ return D_; }
+uint Hypercube::getL(){ return L_; }

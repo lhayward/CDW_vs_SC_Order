@@ -28,6 +28,7 @@ class Hypercube : public Lattice
     
   private:
     uint   D_; //dimension
+    uint   L_; //length
     
     void   init_N_and_neighbours();
     int    round(double num);
@@ -45,6 +46,7 @@ class Hypercube : public Lattice
     
     //getter methods:
     uint getD();
+    uint getL();
 };
 
 #endif  // HYPERCUBE_H
