@@ -1,4 +1,5 @@
-CC = c++ -Wall -funroll-loops #-pg #-xHOST # -O3
+CC = g++ 
+CFLAGS = -std=c++11 -Wall -funroll-loops #-pg #-xHOST # -O3
 
 PROG = o6
 HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h VectorSpins.h
@@ -6,37 +7,37 @@ SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp 
 OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o Vector_NDim.o VectorSpins.o
 
 $(PROG): $(OBJS)
-	$(CC) $(OBJS) -o $(PROG)
+	$(CC) $(CFLAGS) $(OBJS) -o $(PROG)
 	
 FileReading.o: FileReading.cpp $(HDRS)
-	$(CC) -c FileReading.cpp -o FileReading.o
+	$(CC) $(CFLAGS) -c FileReading.cpp -o FileReading.o
 	
 Hypercube.o: Hypercube.cpp $(HDRS)
-	$(CC) -c Hypercube.cpp -o Hypercube.o
+	$(CC) $(CFLAGS) -c Hypercube.cpp -o Hypercube.o
 	
 Lattice.o: Lattice.cpp $(HDRS)
-	$(CC) -c Lattice.cpp -o Lattice.o
+	$(CC) $(CFLAGS) -c Lattice.cpp -o Lattice.o
 	
 Measure.o: Measure.cpp $(HDRS)
-	$(CC) -c Measure.cpp -o Measure.o
+	$(CC) $(CFLAGS) -c Measure.cpp -o Measure.o
 	
 Model.o: Model.cpp $(HDRS)
-	$(CC) -c Model.cpp -o Model.o
+	$(CC) $(CFLAGS) -c Model.cpp -o Model.o
 	
 O6_Model.o: O6_Model.cpp $(HDRS)
-	$(CC) -c O6_Model.cpp -o O6_Model.o
+	$(CC) $(CFLAGS) -c O6_Model.cpp -o O6_Model.o
 	
 SimParameters.o: SimParameters.cpp $(HDRS)
-	$(CC) -c SimParameters.cpp -o SimParameters.o
+	$(CC) $(CFLAGS) -c SimParameters.cpp -o SimParameters.o
 	
 Vector_NDim.o: Vector_NDim.cpp $(HDRS)
-	$(CC) -c Vector_NDim.cpp -o Vector_NDim.o
+	$(CC) $(CFLAGS) -c Vector_NDim.cpp -o Vector_NDim.o
 	
 VectorSpins.o: VectorSpins.cpp $(HDRS)
-	$(CC) -c VectorSpins.cpp -o VectorSpins.o
+	$(CC) $(CFLAGS) -c VectorSpins.cpp -o VectorSpins.o
 	
 Main.o: Main.cpp $(HDRS)
-	$(CC) -c Main.cpp -o Main.o 
+	$(CC) $(CFLAGS) -c Main.cpp -o Main.o 
 	
 clean:
 	rm -f $(PROG) $(OBJS) 

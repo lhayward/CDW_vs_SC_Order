@@ -9,7 +9,7 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -19,7 +19,7 @@ class Measure
     typedef unsigned int  uint;
     
   private:
-    std::map<std::string,double> measurements;
+    std::unordered_map<std::string,double> measurements;
     std::vector<std::string> measStrings;
     
   public:

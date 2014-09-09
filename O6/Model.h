@@ -23,7 +23,7 @@ class Model
     double        J_;       //coupling 
     double        T_;       //current temperature
     double        energy_;  //current energy
-    Measure       measures;
+    Measure       measures; //observables to record
     std::ofstream fout;
     
   public:

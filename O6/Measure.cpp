@@ -32,25 +32,18 @@ void Measure::insert(std::string label)
 /****************************************** print() ******************************************/
 void Measure::print()
 {
-  std::map<std::string,double>::iterator it;
-  
   std::cout << "Measurements:" << std::endl;
+  
   //Print the measurements in the order the measStrings were added:
   for( uint i=0; i<measStrings.size(); i++ )
   { std::cout << "  " << measStrings[i] << ": " << measurements[measStrings[i]] << '\n'; }
-  //for( it=measurements.begin(); it!=measurements.end(); ++it )
-  //{ std::cout << "  " << it->first << ": " << it->second << '\n'; }
+
   std::cout << std::endl;
 }
 
 /********************** writeAverages(std::ofstream* fout, uint numMeas) *********************/
 void Measure::writeAverages(std::ofstream* fout, uint numMeas)
 {
-  //std::map<std::string,double>::iterator it;
-  
-  //for( it=measurements.begin(); it!=measurements.end(); ++it )
-  //{ (*fout) << '\t' << (it->second/(1.0*numMeas)); }
-  
   //Write the measurement averages in the order the measStrings were added:
   for( uint i=0; i<measStrings.size(); i++ )
   { (*fout) << '\t' << (measurements[measStrings[i]]/(1.0*numMeas)); }
@@ -59,11 +52,6 @@ void Measure::writeAverages(std::ofstream* fout, uint numMeas)
 /******************************************* zero() ******************************************/
 void Measure::zero()
 {
-  //std::map<std::string,double>::iterator it;
-  
-  //for( it=measurements.begin(); it!=measurements.end(); ++it )
-  //{ it->second = 0.0; }
-  
   for( uint i=0; i<measStrings.size(); i++ )
   { measurements[measStrings[i]] = 0.0; }
 }
