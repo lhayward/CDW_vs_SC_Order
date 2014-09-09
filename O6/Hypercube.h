@@ -27,16 +27,16 @@ class Hypercube : public Lattice
     typedef unsigned int  uint;
     
   private:
-    uint   D_; //dimension
-    uint   L_; //length
+    uint  D_; //dimension
+    uint* L_; //length in each dimension
     
-    void   init_N_and_neighbours();
+    void   initNeighbours();
     int    round(double num);
     //void   trimWhiteSpace(std::string* word);
+    uint   nextInDir(uint dir); //used by initNeighbours method
     uint   uintPower(uint base, uint exp);
     
   public:
-    Hypercube(uint L, uint D);
     Hypercube(std::ifstream* fin, std::string fileName);
     virtual ~Hypercube();
     
@@ -45,8 +45,8 @@ class Hypercube : public Lattice
     virtual void printNeighbours();
     
     //getter methods:
-    uint getD();
-    uint getL();
+    uint  getD();
+    uint* getL();
 };
 
 #endif  // HYPERCUBE_H

@@ -15,26 +15,26 @@
 //typdef needed because uint is a return types:
 typedef Hypercube::uint uint;
 
-/*************************** Hypercube(int L, int D) (constructor) ***************************/
-Hypercube::Hypercube(uint L, uint D)
-  : Lattice()
-{
-  D_ = D;
-  z_ = 2*D;
-  init_N_and_neighbours();
-}
-
 /************* Hypercube(std::ifstream* fin, std::string fileName) (constructor) *************/
 Hypercube::Hypercube(std::ifstream* fin, std::string fileName)
   : Lattice()
 {
   const char EQUALS_CHAR = '=';
+  const char LIST_START_CHAR = '[';
+  const char LIST_END_CHAR = ']';
   
-  //read in D from the file:
+  //read in D_ from the file:
   if( fin!=NULL && fin->is_open() )
   { 
-    D_ = FileReading::readUint(fin, EQUALS_CHAR); 
-    L_ = FileReading::readUint(fin, EQUALS_CHAR);
+    D_ = FileReading::readUint     (fin, EQUALS_CHAR); 
+    L_ = FileReading::readUintArray(fin, D_, 1, EQUALS_CHAR, LIST_START_CHAR, LIST_END_CHAR);
+    
+    N_ = 1;
+    for( uint i=0; i<D_; i++ )
+    { N_ *= L_[i]; }
+    
+    z_ = 2*D_;
+    initNeighbours();
   }
   else
   {
@@ -42,9 +42,6 @@ Hypercube::Hypercube(std::ifstream* fin, std::string fileName)
               << "\"\n" << std::endl;
     D_=1;
   }
-  
-  z_ = 2*D_;
-  init_N_and_neighbours();
 }
 
 /********************************* ~Hypercube() (destructor) *********************************/
@@ -78,10 +75,11 @@ uint Hypercube::getNeighbour(uint i, uint j)
   return result;
 }
 
-/********************************** init_N_and_neighbours() **********************************/
-void Hypercube::init_N_and_neighbours()
+/************************************** initNeighbours() *************************************/
+void Hypercube::initNeighbours()
 {
-  N_ = uintPower(L_,D_);
+  uint next;     //used to naively estimate neighbour (before boundary correction) 
+  uint next_mod; //used to determine if we are on boundary
 
   //initialize the neighbours_ array (note periodic boundary conditions):
   neighbours_ = new uint*[N_];
@@ -91,10 +89,13 @@ void Hypercube::init_N_and_neighbours()
   { 
     for( uint j=0; j<D_; j++ ) 
     {
-      neighbours_[i][j] = i + uintPower(L_,j);
+      next     = nextInDir(j);
+      next_mod = nextInDir(j+1);
+      
+      neighbours_[i][j] = i + next;
       //fix at the boundaries:
-      if( neighbours_[i][j]%uintPower(L_,(j+1)) < uintPower(L_,j) )
-      { neighbours_[i][j] -= uintPower(L_,(j+1)); }
+      if( neighbours_[i][j]%next_mod < next )
+      { neighbours_[i][j] -= next_mod; }
       
       //initialize the corresponding neighbour (note that this information is redundant for a
       //hypercube, but we include it since some Model classes won't assume a hypercubic 
@@ -104,14 +105,35 @@ void Hypercube::init_N_and_neighbours()
   } //i
 }
 
+/************************************ nextInDir(uint dir) ************************************/
+uint Hypercube::nextInDir(uint dir)
+{
+  uint result = 1;
+  for(uint i=0; i<dir; i++)
+  { result *= L_[i]; } 
+  
+  return result;
+} //nextInDir method
+
 /*************************************** printParams() ***************************************/
 void Hypercube::printParams()
 {
   std::cout << "Hypercube Parameters:\n"
             << "--------------------\n"
-            << "           Lattice Length L = " << L_ << "\n"
-            << "                Dimension D = " << D_ << "\n"
-            << "  Number of Lattice Sites N = " << N_ << "\n"
+            << "                Dimension D = " << D_ << "\n";
+  if( L_[0] == L_[1] )
+  { std::cout << "     Lattice Length Lx = Ly = " << L_[0] << "\n"; }
+  else
+  {
+    std::cout << "          Lattice Length Lx = " << L_[0] << "\n"
+              << "          Lattice Length Ly = " << L_[1] << "\n";
+  }
+  
+  //if D=3, also print the length along the z direction:
+  if( D_==3 )
+  { std::cout << "          Lattice Length Lz = " << L_[2] << "\n"; }
+  
+  std::cout << "  Number of Lattice Sites N = " << N_ << "\n"
             << std::endl;
   
 } //printParams method
@@ -174,5 +196,5 @@ uint Hypercube::uintPower(uint base, uint exp)
 } //uintPower method
 
 /*********************************** Public Getter Methods: **********************************/
-uint Hypercube::getD(){ return D_; }
-uint Hypercube::getL(){ return L_; }
+uint  Hypercube::getD(){ return D_; }
+uint* Hypercube::getL(){ return L_; }

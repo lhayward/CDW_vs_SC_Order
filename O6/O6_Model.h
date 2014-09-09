@@ -32,8 +32,8 @@ class O6_Model : public Model
                       
     //parameters of the lattice:
     uint    D_;       //dimension
-    uint    L_;       //hypercube linear length
-    uint    N_;       //number of spins living on the hypercube   
+    uint    N_;       //number of spins living on the hypercube
+    uint*   L_;       //lattice's linear length in each dimension
     
     Hypercube*   hcube_; //the hypercubic lattice on which the d.o.f. live
     VectorSpins* spins_; //the degrees of freedom (d.o.f.) for the model

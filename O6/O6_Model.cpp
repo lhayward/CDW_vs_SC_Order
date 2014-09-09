@@ -213,7 +213,7 @@ void O6_Model::updateMagnetization()
 /***************************** writeBin(int binNum, int numMeas) *****************************/
 void O6_Model::writeBin(int binNum, int numMeas)
 {
-  fout << L_ << '\t' << T_ << '\t' << binNum;
+  fout << L_[0] << '\t' << T_ << '\t' << binNum;
   measures.writeAverages(&fout, numMeas);
   fout << std::endl;
 }
