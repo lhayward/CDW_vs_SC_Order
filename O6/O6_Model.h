@@ -29,6 +29,8 @@ class O6_Model : public Model
     double  gPrime_;  //quartic anisotropy
     double  w_;       //controls the symmetry of the CDW order (stripe for w<0, checkerboard
                       //when w>0)
+    double  Vz_;      //interlayer coupling for CDW order (only applicable when D_=3)
+    double  VzPrime_; //interlayer coupling for SC order (only applicable when D_=3)
                       
     //parameters of the lattice:
     uint    D_;       //dimension

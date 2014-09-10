@@ -41,10 +41,21 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
       {
         D_  = hrect_->getD();
         
+        //This model only works in two or three dimension:
         if( D_==2 || D_==3 )
         {
           L_  = hrect_->getL();
           N_  = hrect_->getN();
+          
+          Vz_      = 0;
+          VzPrime_ = 0;
+          
+          //if D_=3, then the input file should also specify the interlayer coupling strength:
+          if( D_==3 )
+          {
+            Vz_      = FileReading::readDouble(fin, EQUALS_CHAR);
+            VzPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
+          } //if for D_==3
       
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
@@ -52,7 +63,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           updateEnergy();
           mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0);
           updateMagnetization();
-        }
+        } //if for dimension
         else
         {
           std::cout << "ERROR in O6_Model constructor:\n" 
@@ -119,8 +130,14 @@ void O6_Model::printParams()
   std::cout << "  lambda = " << lambda_ << "\n"
             << "       g = " << g_      << "\n"
             << "      g' = " << gPrime_ << "\n"
-            << "       w = " << w_      << "\n"
-            << std::endl;
+            << "       w = " << w_      << "\n";
+  //if D_==3, then also print the interlayer coupling:
+  if( D_==3 )
+  {
+    std::cout << "      Vz = " << Vz_      << "\n"
+              << "     Vz' = " << VzPrime_ << "\n";
+  }
+  std::cout << std::endl;
 }
 
 /**************************************** printSpins() ***************************************/
@@ -160,12 +177,14 @@ void O6_Model::updateEnergy()
   Vector_NDim* currSpin;
   Vector_NDim* neighbour_x;
   Vector_NDim* neighbour_y;
-  double       sumCDWSqs    = 0;
-  double       energy1      = 0;
-  double       energyLambda = 0;
-  double       energyg      = 0;
-  double       energygPrime = 0;
-  double       energyw      = 0;
+  double       sumCDWSqs     = 0;
+  double       energy1       = 0;
+  double       energyLambda  = 0;
+  double       energyg       = 0;
+  double       energygPrime  = 0;
+  double       energyw       = 0;
+  double       energyVz      = 0;
+  double       energyVzPrime = 0;
   
   energy_=0;
   
