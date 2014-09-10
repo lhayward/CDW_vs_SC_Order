@@ -17,8 +17,8 @@ class Lattice
     typedef unsigned int  uint;
   
   protected: 
-    uint   N_; //total number of lattice sites
-    uint   z_; //number of nearest neighbouring sites for each site
+    uint   N_;          //total number of lattice sites
+    uint   z_;          //number of nearest neighbouring sites for each site
     uint** neighbours_; //coordinates of each vertex's nearest neighbours
     
   public:

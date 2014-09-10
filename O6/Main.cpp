@@ -16,7 +16,7 @@
 #include <string>
 #include <typeinfo>
 #include "FileReading.h"
-#include "Hypercube.h"
+#include "Hyperrectangle.h"
 #include "MersenneTwister.h"
 #include "Lattice.h"
 #include "Model.h"
@@ -121,7 +121,7 @@ Lattice* readLattice(std::string latticeName, std::string fileName, std::string 
   if( fin.is_open() )
   { FileReading::readUntilFound(&fin, startStr); }
   
-  return new Hypercube(&fin, fileName);
+  return new Hyperrectangle(&fin, fileName);
 }
 
 /**************** readModel(std::string modelName, std::string inFileName, ... ****************

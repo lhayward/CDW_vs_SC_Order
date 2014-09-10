@@ -2,9 +2,9 @@ CC = g++
 CFLAGS = -std=c++11 -Wall -funroll-loops #-pg #-xHOST # -O3
 
 PROG = o6
-HDRS = MersenneTwister.h FileReading.h Hypercube.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h VectorSpins.h
-SRCS = Main.cpp FileReading.cpp Hypercube.cpp Lattice.cpp Measure.cpp Model.cpp O6_Model.cpp SimParameters.cpp Vector_NDim.cpp VectorSpins.cpp
-OBJS = Main.o FileReading.o Hypercube.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o Vector_NDim.o VectorSpins.o
+HDRS = MersenneTwister.h FileReading.h Hyperrectangle.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h VectorSpins.h
+SRCS = Main.cpp FileReading.cpp Hyperrectangle.cpp Lattice.cpp Measure.cpp Model.cpp O6_Model.cpp SimParameters.cpp Vector_NDim.cpp VectorSpins.cpp
+OBJS = Main.o FileReading.o Hyperrectangle.o Lattice.o Measure.o Model.o O6_Model.o SimParameters.o Vector_NDim.o VectorSpins.o
 
 $(PROG): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(PROG)
@@ -12,8 +12,8 @@ $(PROG): $(OBJS)
 FileReading.o: FileReading.cpp $(HDRS)
 	$(CC) $(CFLAGS) -c FileReading.cpp -o FileReading.o
 	
-Hypercube.o: Hypercube.cpp $(HDRS)
-	$(CC) $(CFLAGS) -c Hypercube.cpp -o Hypercube.o
+Hyperrectangle.o: Hyperrectangle.cpp $(HDRS)
+	$(CC) $(CFLAGS) -c Hyperrectangle.cpp -o Hyperrectangle.o
 	
 Lattice.o: Lattice.cpp $(HDRS)
 	$(CC) $(CFLAGS) -c Lattice.cpp -o Lattice.o

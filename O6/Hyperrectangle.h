@@ -3,25 +3,31 @@
 ***********************************************************************************************
 * Lauren E. Hayward Sierens
 ***********************************************************************************************
-* File:   Hypercube.h
-* Description: The vertices of a are labelled along the x-direction, followed by the 
+* File:   Hyperrectangle.h
+* Description: Note that L_[0] == Lx = Lattice length along x
+*                        L_[1] == Ly = Lattice length along y
+*                          .
+*                          .
+*                          .
+*
+*              The vertices are labelled along the x-direction, followed by the 
 *              y-direction, etc. 
-*              So for example, the first L^2 vertices (in the x-y plane in D>=2) are:
-*                   (L^2-L)  (L^2-L+1)  . . .  (L^2-1)
-*                      .         .                .
-*                      .         .                .
-*                      .         .                .
-*                      L        L+1     . . .    2L-1
-*                      0         1      . . .    L-1
+*              So for example, the first Lx*Ly (in the x-y plane in D>=2) are:
+*                (Lx*Ly - Lx)    (Lx*Ly - Lx + 1)    . . .    (Lx*Ly - 1)
+*                     .                 .                          .
+*                     .                 .                          .
+*                     .                 .                          .
+*                     Lx               Lx+1          . . .      2Lx - 1
+*                     0                 1            . . .       Lx-1
 **********************************************************************************************/
 
-#ifndef HYPERCUBE_H 
-#define HYPERCUBE_H
+#ifndef HYPERRECTANGLE_H 
+#define HYPERRECTANGLE_H
 
 #include <fstream>
 #include "Lattice.h"
 
-class Hypercube : public Lattice
+class Hyperrectangle : public Lattice
 { 
   public:
     typedef unsigned int  uint;
@@ -37,8 +43,8 @@ class Hypercube : public Lattice
     uint   uintPower(uint base, uint exp);
     
   public:
-    Hypercube(std::ifstream* fin, std::string fileName);
-    virtual ~Hypercube();
+    Hyperrectangle(std::ifstream* fin, std::string fileName);
+    virtual ~Hyperrectangle();
     
     virtual uint getNeighbour(uint i, uint j);
     virtual void printParams();
@@ -49,4 +55,4 @@ class Hypercube : public Lattice
     uint* getL();
 };
 
-#endif  // HYPERCUBE_H
+#endif  // HYPERRECTANGLE_H

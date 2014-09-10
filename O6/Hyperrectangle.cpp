@@ -3,20 +3,20 @@
 ***********************************************************************************************
 * Lauren E. Hayward Sierens
 ***********************************************************************************************
-* File:   Hypercube.cpp
+* File:   Hyperrectangle.cpp
 **********************************************************************************************/
 
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
 #include "FileReading.h"
-#include "Hypercube.h"
+#include "Hyperrectangle.h"
 
 //typdef needed because uint is a return types:
-typedef Hypercube::uint uint;
+typedef Hyperrectangle::uint uint;
 
-/************* Hypercube(std::ifstream* fin, std::string fileName) (constructor) *************/
-Hypercube::Hypercube(std::ifstream* fin, std::string fileName)
+/*********** Hyperrectangle(std::ifstream* fin, std::string fileName) (constructor) **********/
+Hyperrectangle::Hyperrectangle(std::ifstream* fin, std::string fileName)
   : Lattice()
 {
   const char EQUALS_CHAR = '=';
@@ -38,14 +38,14 @@ Hypercube::Hypercube(std::ifstream* fin, std::string fileName)
   }
   else
   {
-    std::cout << "ERROR in Hypercube constructor: could not read from file \"" << fileName 
+    std::cout << "ERROR in Hyperrectangle constructor: could not read from file \"" << fileName
               << "\"\n" << std::endl;
     D_=1;
   }
 }
 
-/********************************* ~Hypercube() (destructor) *********************************/
-Hypercube::~Hypercube()
+/******************************* ~Hyperrectangle() (destructor) ******************************/
+Hyperrectangle::~Hyperrectangle()
 {
   //delete the neighbours_ array:
   for(uint i=0; i<N_; i++)
@@ -57,10 +57,10 @@ Hypercube::~Hypercube()
   if( neighbours_ != NULL )
   { delete[] neighbours_; }
   neighbours_ = NULL;
-} // ~Hypercube
+} // ~Hyperrectangle
 
 /******************************** getNeighbour(uint i, uint j) *******************************/
-uint Hypercube::getNeighbour(uint i, uint j)
+uint Hyperrectangle::getNeighbour(uint i, uint j)
 {
   uint result = 0;
   
@@ -68,15 +68,15 @@ uint Hypercube::getNeighbour(uint i, uint j)
   { result = neighbours_[i][j]; }
   else
   { 
-    std::cout << "ERROR in Hypercube::getNeighbour(uint i, uint j): NULL neighbours_ array or "
-              << "index out of bounds" << std::endl; 
+    std::cout << "ERROR in Hyperrectangle::getNeighbour(uint i, uint j): NULL neighbours_ "
+              << "array or index out of bounds" << std::endl; 
   }
   
   return result;
 }
 
 /************************************** initNeighbours() *************************************/
-void Hypercube::initNeighbours()
+void Hyperrectangle::initNeighbours()
 {
   uint next;     //used to naively estimate neighbour (before boundary correction) 
   uint next_mod; //used to determine if we are on boundary
@@ -98,15 +98,15 @@ void Hypercube::initNeighbours()
       { neighbours_[i][j] -= next_mod; }
       
       //initialize the corresponding neighbour (note that this information is redundant for a
-      //hypercube, but we include it since some Model classes won't assume a hypercubic 
-      //lattice)
+      //hyperrectangle, but we include it since some Model classes won't assume a 
+      //hyperrectangular lattice)
       neighbours_[ neighbours_[i][j] ] [j + D_] = i;
     } //j
   } //i
 }
 
 /************************************ nextInDir(uint dir) ************************************/
-uint Hypercube::nextInDir(uint dir)
+uint Hyperrectangle::nextInDir(uint dir)
 {
   uint result = 1;
   for(uint i=0; i<dir; i++)
@@ -116,10 +116,10 @@ uint Hypercube::nextInDir(uint dir)
 } //nextInDir method
 
 /*************************************** printParams() ***************************************/
-void Hypercube::printParams()
+void Hyperrectangle::printParams()
 {
-  std::cout << "Hypercube Parameters:\n"
-            << "--------------------\n"
+  std::cout << "Hyperrectangle Parameters:\n"
+            << "-------------------------\n"
             << "                Dimension D = " << D_ << "\n";
   if( L_[0] == L_[1] )
   { std::cout << "     Lattice Length Lx = Ly = " << L_[0] << "\n"; }
@@ -139,9 +139,9 @@ void Hypercube::printParams()
 } //printParams method
 
 /****************************************** printNeighbours() ******************************************/
-void Hypercube::printNeighbours()
+void Hyperrectangle::printNeighbours()
 {
-  std::cout << "Hypercube Neighbours list:" << std::endl;
+  std::cout << "Hyperrectangle Neighbours list:" << std::endl;
 
   //print the neighbours_ array:
   for( uint i=0; i<N_; i++ )
@@ -159,7 +159,7 @@ void Hypercube::printNeighbours()
 } //printNeighbours method
 
 /******************************************* round ******************************************/
-int Hypercube::round(double num)
+int Hyperrectangle::round(double num)
 {
     int result;
     
@@ -172,7 +172,7 @@ int Hypercube::round(double num)
 }
 
 /***************************** trimWhiteSpace(std::string* word) *****************************/
-/*void Hypercube::trimWhiteSpace(std::string* word)
+/*void Hyperrectangle::trimWhiteSpace(std::string* word)
 {
   std::size_t index;
   
@@ -186,7 +186,7 @@ int Hypercube::round(double num)
 }*/
 
 /******************************** uintPower(int base, int exp) *******************************/
-uint Hypercube::uintPower(uint base, uint exp)
+uint Hyperrectangle::uintPower(uint base, uint exp)
 {
   uint result = 1;
   for(uint i=1; i<=exp; i++)
@@ -196,5 +196,5 @@ uint Hypercube::uintPower(uint base, uint exp)
 } //uintPower method
 
 /*********************************** Public Getter Methods: **********************************/
-uint  Hypercube::getD(){ return D_; }
-uint* Hypercube::getL(){ return L_; }
+uint  Hyperrectangle::getD(){ return D_; }
+uint* Hyperrectangle::getL(){ return L_; }

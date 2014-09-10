@@ -36,15 +36,15 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
   
     if( lattice != NULL )
     {
-      hcube_ = dynamic_cast<Hypercube *>(lattice);
-      if(hcube_)
+      hrect_ = dynamic_cast<Hyperrectangle *>(lattice);
+      if(hrect_)
       {
-        D_  = hcube_->getD();
+        D_  = hrect_->getD();
         
         if( D_==2 || D_==3 )
         {
-          L_  = hcube_->getL();
-          N_  = hcube_->getN();
+          L_  = hrect_->getL();
+          N_  = hrect_->getN();
       
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
@@ -56,14 +56,14 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
         else
         {
           std::cout << "ERROR in O6_Model constructor:\n" 
-                    << "  The Hypercube lattice must have dimension 2 or 3." 
+                    << "  The Hyperrectangle lattice must have dimension 2 or 3." 
                     << std::endl;
         }
       }
       else
       {
         std::cout << "ERROR in O6_Model constructor:\n" 
-                  << "  A lattice of type Hypercube is required.\n"
+                  << "  A lattice of type Hyperrectangle is required.\n"
                   << "  A lattice of type " << typeid(*lattice).name() << " was given.\n" 
                   << std::endl;
       }
@@ -172,8 +172,8 @@ void O6_Model::updateEnergy()
   for( uint i=0; i<N_; i++ )
   { 
     currSpin    = spins_->getSpin(i);
-    neighbour_x = spins_->getSpin( hcube_->getNeighbour(i,0) );
-    neighbour_y = spins_->getSpin( hcube_->getNeighbour(i,1) );
+    neighbour_x = spins_->getSpin( hrect_->getNeighbour(i,0) );
+    neighbour_y = spins_->getSpin( hrect_->getNeighbour(i,1) );
     
     energy1 += currSpin->dotForRange( neighbour_x, 0, 1 ) 
                + currSpin->dotForRange( neighbour_y, 0, 1 ); 

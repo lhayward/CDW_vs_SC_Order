@@ -10,7 +10,7 @@
 #define O6_MODEL
 
 #include <string>
-#include "Hypercube.h"
+#include "Hyperrectangle.h"
 #include "Model.h"
 #include "Vector_NDim.h"
 #include "VectorSpins.h"
@@ -32,12 +32,12 @@ class O6_Model : public Model
                       
     //parameters of the lattice:
     uint    D_;       //dimension
-    uint    N_;       //number of spins living on the hypercube
+    uint    N_;       //number of spins living on the hyperrectangle
     uint*   L_;       //lattice's linear length in each dimension
     
-    Hypercube*   hcube_; //the hypercubic lattice on which the d.o.f. live
-    VectorSpins* spins_; //the degrees of freedom (d.o.f.) for the model
-    Vector_NDim* mag_;   //total magnetization of the spins
+    Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
+    VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
+    Vector_NDim*    mag_;   //total magnetization of the spins
     
     void   localUpdate(MTRand* randomGen);
     uint   uintPower  (uint base, uint exp);
