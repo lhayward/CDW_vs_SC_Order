@@ -120,18 +120,10 @@ void Hyperrectangle::printParams()
 {
   std::cout << "Hyperrectangle Parameters:\n"
             << "-------------------------\n"
-            << "                Dimension D = " << D_ << "\n";
-  if( L_[0] == L_[1] )
-  { std::cout << "     Lattice Length Lx = Ly = " << L_[0] << "\n"; }
-  else
-  {
-    std::cout << "          Lattice Length Lx = " << L_[0] << "\n"
-              << "          Lattice Length Ly = " << L_[1] << "\n";
-  }
-  
-  //if D=3, also print the length along the z direction:
-  if( D_==3 )
-  { std::cout << "          Lattice Length Lz = " << L_[2] << "\n"; }
+            << "                Dimension D = " << D_    << "\n"
+            << "        Lattice Length L[0] = " << L_[0] << "\n";
+  for( uint i=1; i<D_; i++ )
+  { std::cout << "                       L[" << i << "] = " << L_[i] << "\n"; }
   
   std::cout << "  Number of Lattice Sites N = " << N_ << "\n"
             << std::endl;
