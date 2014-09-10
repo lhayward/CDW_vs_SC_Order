@@ -71,11 +71,11 @@ void SimParameters::print()
 
   //print the list of temperatures:
   for( uint i=0; i<(TList_->size() - 1); i++ )
-  { std::cout << TList_->at(i) << ", "; }
+  { std::cout << (*TList_)[i] << ", "; }
 
   //print the last temperature element:
   if( TList_->size() > 0 )
-  { std::cout << TList_->at(TList_->size() - 1); }
+  { std::cout << (*TList_)[TList_->size() - 1]; }
   std::cout << " ]\n";
 
   //print the rest of the parameters:

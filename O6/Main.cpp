@@ -41,7 +41,7 @@ int main(int argc, char** argv)
   Lattice* lattice;
   Model* model;
   double T; //current temperature
-    
+  
   //variables related to input/output data from/to files:
   std::string fileSuffix      = getFileSuffix( argc, argv );
   std::string paramFileName   = "params" + fileSuffix + ".txt";
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
   //loop over the different temperatures:
   for( uint TIndex=0; TIndex<(params->TList_->size()); TIndex++)
   {
-    T = params->TList_->at(TIndex);
+    T = (*(params->TList_))[TIndex];
     std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
               << std::endl;
     model->setT(T);
