@@ -177,6 +177,7 @@ void O6_Model::updateEnergy()
   Vector_NDim* currSpin;
   Vector_NDim* neighbour_x;
   Vector_NDim* neighbour_y;
+  Vector_NDim* neighbour_z;
   double       sumCDWSqs     = 0;
   double       energy1       = 0;
   double       energyLambda  = 0;
@@ -191,8 +192,8 @@ void O6_Model::updateEnergy()
   for( uint i=0; i<N_; i++ )
   { 
     currSpin    = spins_->getSpin(i);
-    neighbour_x = spins_->getSpin( hrect_->getNeighbour(i,0) );
-    neighbour_y = spins_->getSpin( hrect_->getNeighbour(i,1) );
+    neighbour_x = spins_->getSpin( hrect_->getNeighbour(i,0) ); //nearest neighbour along +x
+    neighbour_y = spins_->getSpin( hrect_->getNeighbour(i,1) ); //nearest neighbour along +y
     
     energy1 += currSpin->dotForRange( neighbour_x, 0, 1 ) 
                + currSpin->dotForRange( neighbour_y, 0, 1 ); 
@@ -217,7 +218,23 @@ void O6_Model::updateEnergy()
                + pow( spins_->getSpin(i)->getSquareForRange(4,5), 2.0 ); }
   energyw *= w_/2.0;
   
-  energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw);
+  //in three dimensions, then also add the energy due to interlayer coupling:
+  if( D_==3 )
+  {
+    for( uint i=0; i<N_; i++ )
+    { 
+      currSpin    = spins_->getSpin(i);
+      neighbour_z = spins_->getSpin( hrect_->getNeighbour(i,2) ); //nearest neighbour along +z
+      
+      energyVz      += currSpin->dotForRange( neighbour_z, 2, VECTOR_SPIN_DIM-1 ); 
+      energyVzPrime += currSpin->dotForRange( neighbour_z, 0, 1 );
+    }
+    energyVz      *= -1*Vz_;
+    energyVzPrime *= -1*VzPrime_;
+  }//if for D_==3
+  
+  energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw 
+                + energyVz + energyVzPrime);
 }
 
 /*********************************** updateMagnetization() ***********************************/
