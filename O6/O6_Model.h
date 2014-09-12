@@ -41,6 +41,7 @@ class O6_Model : public Model
     VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
     Vector_NDim*    mag_;   //total magnetization of the spins
     
+    double getHelicityModulus(int dir);
     void   localUpdate(MTRand* randomGen);
     uint   uintPower  (uint base, uint exp);
     

@@ -104,6 +104,44 @@ O6_Model::~O6_Model()
   mag_ = NULL;
 }
 
+/************************************* getHelicityModulus *************************************
+* Calculates and returns the helicity modulus for the desired lattice directions.
+* Note: dir=0 corresponds to the x-direction
+*       dir=1 corresponds to the y-direction
+*       dir=2 corresponds to the z-direction (only applicable when D_=3)
+**********************************************************************************************/
+double O6_Model::getHelicityModulus(int dir)
+{
+  double       helicityMod = 0; //resulting helicity modulus
+  //int neighDir;  //direction (for neighbour's array) corresponding to the specified dir
+  Vector_NDim* currSpin;        //current spin
+  Vector_NDim* neigh;           //current neighbour
+  double       sum1;            //first sum in formula for helicity modulus
+  double       sum2;            //second sum in formula for helicity modulus
+  
+  //compute the helicity modulus if a valid direction was passed (otherwise just return 0):
+  if( dir==0 || dir==1 || (dir==2 && D_==3) )
+  {
+     //neighDir = 2*dir;  //0 if x-direction (dir=0), 2 if y-direction (dir=1)
+     sum1=0;
+     sum2=0;
+     
+     //loop over all spins:
+     for(int i=0; i<N_; i++)
+     {
+      currSpin = spins_->getSpin(i);
+      neigh    = spins_->getSpin( hrect_->getNeighbour(i,dir) ); //nearest neighbour along +x
+      //neigh = spins[neighbours[i][neighDir]];
+      
+      sum1 += currSpin->dotForRange(neigh,0,1);
+      sum2 += ( currSpin->v_[0] * neigh->v_[1] ) - ( currSpin->v_[1] * neigh->v_[0] );
+     }
+     helicityMod = sum1/(1.0*N_) - J_/(T_*N_)*pow(sum2,2); 
+  } //end if
+  
+  return helicityMod;
+}
+
 /******************************* localUpdate(MTRand* randomGen) ******************************/
 void O6_Model::localUpdate(MTRand* randomGen)
 {
