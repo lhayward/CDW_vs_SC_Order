@@ -56,13 +56,11 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
             Vz_      = FileReading::readDouble(fin, EQUALS_CHAR);
             VzPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
           } //if for D_==3
-      
+          
+          mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0);
+          
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
-          
-          updateEnergy();
-          mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0);
-          updateMagnetization();
         } //if for dimension
         else
         {
@@ -145,9 +143,93 @@ double O6_Model::getHelicityModulus(int dir)
 /******************************* localUpdate(MTRand* randomGen) ******************************/
 void O6_Model::localUpdate(MTRand* randomGen)
 {
-  uint latticeSite; //randomly selected spin location
+  const uint   dir_x = 0;
+  const uint   dir_y = 1;
+  const uint   dir_z = 2;
   
+  uint         latticeSite; //randomly selected spin location
+  double       deltaE;
+  double       oldCDWSumSqs;
+  double       newCDWSumSqs;
+  Vector_NDim* spin_old;  //previous state of spin (at randomly selected lattice site)
+  Vector_NDim* spin_new;  //new proposed value for spin
+  Vector_NDim* nnSum_xy;
+  Vector_NDim* nnSum_z;
+  
+  //randomly generate a new spin:
+  spin_new = new Vector_NDim(VECTOR_SPIN_DIM, randomGen);
+  
+  //randomly select a spin on the lattice:
   latticeSite = randomGen->randInt(N_-1);
+  spin_old    = spins_->getSpin(latticeSite);
+  
+  //loop to calculate the nearest neighbour sum for the xy-plane:
+  nnSum_xy = new Vector_NDim(VECTOR_SPIN_DIM, 0);
+  for( int i=dir_x; i<=dir_y; i++ )
+  { 
+    nnSum_xy->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, i    ) ) ); 
+    nnSum_xy->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, i+D_ ) ) );
+  }
+  
+  //calculate the nearest neighbour sum for the z-direction (if D_=3):
+  nnSum_z  = new Vector_NDim(VECTOR_SPIN_DIM, 0);
+  if( D_==3 )
+  {
+    nnSum_z->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, dir_z    ) ) ); 
+    nnSum_z->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, dir_z+D_ ) ) );
+  }
+  
+  oldCDWSumSqs = spin_old->getSquareForRange( 2, VECTOR_SPIN_DIM-1 );
+  newCDWSumSqs = spin_new->getSquareForRange( 2,VECTOR_SPIN_DIM-1 );
+  
+  //calculate the energy change for the proposed move:
+  deltaE = J_*( -1*( nnSum_xy->dotForRange(spin_new,0,1) 
+                     - nnSum_xy->dotForRange(spin_old,0,1) )
+               - lambda_*( nnSum_xy->dotForRange(spin_new,2,VECTOR_SPIN_DIM-1) 
+                           - nnSum_xy->dotForRange(spin_old,2,VECTOR_SPIN_DIM-1) ) 
+               + (g_ + 4*(lambda_-1.0))/2.0*( newCDWSumSqs - oldCDWSumSqs )
+               + gPrime_/2.0*( pow(newCDWSumSqs,2.0) - pow(oldCDWSumSqs,2.0) )
+               + w_/2.0*( pow(spin_new->getSquareForRange(2,3),2.0) 
+                         + pow(spin_new->getSquareForRange(4,5),2.0) 
+                         - pow(spin_old->getSquareForRange(2,3),2.0) 
+                         - pow(spin_old->getSquareForRange(4,5),2.0) ) );
+  //if D_=3 then also include the contribution to deltaE from interlayer coupling:
+  if( D_==3 )
+  {
+    deltaE += J_*( -Vz_*( nnSum_z->dotForRange(spin_new,2,VECTOR_SPIN_DIM-1) 
+                          - nnSum_z->dotForRange(spin_old,2,VECTOR_SPIN_DIM-1) ) 
+                   - VzPrime_*( nnSum_z->dotForRange(spin_new,0,1) 
+                                - nnSum_z->dotForRange(spin_old,0,1) ) );
+  }
+  
+  //if the move is accepted:
+  if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T_) )
+  { 
+    //delete the vector storing the old state of the spin:
+    if(spin_old!=NULL)
+    { delete spin_old; }
+    spin_old = NULL;
+    
+    spins_->setSpin( latticeSite, spin_new );
+    energy_ += deltaE;
+  }
+  //otherwise, the move is rejected:
+  else
+  {
+    //delete the vector storing the rejected new state of the spin:
+    if(spin_new!=NULL)
+    { delete spin_new; }
+    spin_new = NULL;  
+  }
+  
+  //delete the vectors storing the nearest neighbour sums:
+  if(nnSum_xy!=NULL)
+  { delete nnSum_xy; }
+  nnSum_xy = NULL;
+  
+  if(nnSum_z!=NULL)
+  { delete nnSum_z; }
+  nnSum_z = NULL;
 }
 
 /************************************* makeMeasurement() *************************************/
@@ -184,7 +266,11 @@ void O6_Model::printSpins()
 
 /**************************** randomizeLattice(MTRand* randomGen) ****************************/
 void O6_Model::randomizeLattice(MTRand* randomGen)
-{ spins_->randomize(randomGen); }
+{ 
+  spins_->randomize(randomGen);
+  updateEnergy();
+  updateMagnetization();
+}
 
 /************************************* setT(double newT) *************************************/
 void O6_Model::setT(double newT)
@@ -197,6 +283,8 @@ void O6_Model::sweep(MTRand* randomGen)
 {
   for( uint i=0; i<N_; i++ )
   { localUpdate(randomGen); }
+  updateEnergy();
+  updateMagnetization();
 }
 
 /******************************** uintPower(int base, int exp) *******************************/
@@ -278,7 +366,10 @@ void O6_Model::updateEnergy()
 /*********************************** updateMagnetization() ***********************************/
 void O6_Model::updateMagnetization()
 {
-  mag_->clear();
+  if( mag_ != NULL )
+  { mag_->clear(); }
+  else
+  { mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0); }
   
   for( uint i=0; i<N_; i++ )
   { mag_->add( spins_->getSpin(i) ); }

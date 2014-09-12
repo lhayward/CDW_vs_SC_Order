@@ -26,9 +26,10 @@ class VectorSpins
     VectorSpins(uint N, uint spinDim);
     virtual ~VectorSpins();
     
-    Vector_NDim* getSpin(int i);
-    void print();
-    void randomize(MTRand* randomGen);
+    Vector_NDim* getSpin(uint i);
+    void         print();
+    void         randomize(MTRand* randomGen);
+    void         setSpin(uint i, Vector_NDim* newSpin);
 };
 
 #endif  // VECTOR_SPINS_H

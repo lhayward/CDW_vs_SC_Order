@@ -39,6 +39,7 @@ class Model
     virtual void setT       (double newT);
     
     //pure virtual methods (to be implemented by all child classes):
+    virtual void localUpdate        (MTRand* randomGen) = 0;
     virtual void makeMeasurement    () = 0;
     virtual void printSpins         () = 0;
     virtual void randomizeLattice   (MTRand* randomGen) = 0;

@@ -42,13 +42,13 @@ class O6_Model : public Model
     Vector_NDim*    mag_;   //total magnetization of the spins
     
     double getHelicityModulus(int dir);
-    void   localUpdate(MTRand* randomGen);
     uint   uintPower  (uint base, uint exp);
     
   public:
     O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);
     virtual ~O6_Model();
     
+    virtual void localUpdate        (MTRand* randomGen);
     virtual void makeMeasurement    ();
     virtual void printParams        ();
     virtual void printSpins         ();
