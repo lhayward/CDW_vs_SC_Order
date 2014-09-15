@@ -268,8 +268,7 @@ void O6_Model::printSpins()
 void O6_Model::randomizeLattice(MTRand* randomGen)
 { 
   spins_->randomize(randomGen);
-  updateEnergy();
-  updateMagnetization();
+  updateObservables();
 }
 
 /************************************* setT(double newT) *************************************/
@@ -283,8 +282,7 @@ void O6_Model::sweep(MTRand* randomGen)
 {
   for( uint i=0; i<N_; i++ )
   { localUpdate(randomGen); }
-  updateEnergy();
-  updateMagnetization();
+  updateObservables();
 }
 
 /******************************** uintPower(int base, int exp) *******************************/
@@ -361,6 +359,13 @@ void O6_Model::updateEnergy()
   
   energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw 
                 + energyVz + energyVzPrime);
+}
+
+/************************************ updateObservables() ************************************/
+void O6_Model::updateObservables()
+{
+  updateEnergy();
+  updateMagnetization();
 }
 
 /*********************************** updateMagnetization() ***********************************/

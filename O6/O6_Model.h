@@ -42,7 +42,8 @@ class O6_Model : public Model
     Vector_NDim*    mag_;   //total magnetization of the spins
     
     double getHelicityModulus(int dir);
-    uint   uintPower  (uint base, uint exp);
+    uint   uintPower         (uint base, uint exp);
+    void   updateObservables ();
     
   public:
     O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);
