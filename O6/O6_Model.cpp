@@ -378,6 +378,14 @@ void O6_Model::updateMagnetization()
 /***************************** writeBin(int binNum, int numMeas) *****************************/
 void O6_Model::writeBin(int binNum, int numMeas)
 {
+  //if this is the first bin being written to file, then also write a line of text explaining
+  //each column:
+  if( binNum == 1)
+  {
+    fout << "# L \t T \t binNum";
+    measures.writeMeasNames(&fout);
+    fout << std::endl;
+  }
   fout << L_[0] << '\t' << T_ << '\t' << binNum;
   measures.writeAverages(&fout, numMeas);
   fout << std::endl;

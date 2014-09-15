@@ -26,11 +26,12 @@ class Measure
     Measure();
     virtual ~Measure();
     
-    void accumulate   (std::string label, double newMeas);
-    void insert       (std::string label);
-    void print        ();
-    void writeAverages(std::ofstream* fout, uint numMeas);
-    void zero         ();
+    void accumulate    (std::string label, double newMeas);
+    void insert        (std::string label);
+    void print         ();
+    void writeAverages (std::ofstream* fout, uint numMeas);
+    void writeMeasNames(std::ofstream* fout);
+    void zero          ();
 };
 
 #endif  // MEASURE_H

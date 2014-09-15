@@ -49,6 +49,15 @@ void Measure::writeAverages(std::ofstream* fout, uint numMeas)
   { (*fout) << '\t' << (measurements[measStrings[i]]/(1.0*numMeas)); }
 }
 
+/**************************** writeMeasNames(std::ofstream* fout) ****************************/
+void Measure::writeMeasNames(std::ofstream* fout)
+{
+  //Write the names of each observable to the passed file stream (for clarity when processing
+  //the bin file):
+  for( uint i=0; i<measStrings.size(); i++ )
+  { (*fout) << '\t' << measStrings[i]; } 
+}
+
 /******************************************* zero() ******************************************/
 void Measure::zero()
 {
