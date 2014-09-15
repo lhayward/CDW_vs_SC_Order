@@ -61,6 +61,10 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
+          
+          //Add measurement names to Measure object:
+          measures.insert("HelicityModulus_x");
+          measures.insert("HelicityModulus_y");
         } //if for dimension
         else
         {
@@ -68,7 +72,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
                     << "  The Hyperrectangle lattice must have dimension 2 or 3." 
                     << std::endl;
         }
-      }
+      } //if for Hyperrectangle lattice
       else
       {
         std::cout << "ERROR in O6_Model constructor:\n" 
@@ -76,13 +80,13 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
                   << "  A lattice of type " << typeid(*lattice).name() << " was given.\n" 
                   << std::endl;
       }
-    }
+    } //if for non-null Lattice object
     else
     {
       std::cout << "ERROR in O6_Model constructor: The passed Lattice object is not "
                 << "valid\n" << std::endl; 
     }
-  }
+  } //if for valid input file
   else
   { 
     std::cout << "ERROR in Model constructor: could not read from input file\n" << std::endl; 
@@ -236,9 +240,14 @@ void O6_Model::localUpdate(MTRand* randomGen)
 void O6_Model::makeMeasurement()
 {
   double energyPerSpin = energy_/(1.0*N_);
+  double helicity_x    = getHelicityModulus(0);
+  double helicity_y    = getHelicityModulus(1);
   
   measures.accumulate( "E",   energyPerSpin ) ;
   measures.accumulate( "ESq", pow(energyPerSpin,2) );
+  measures.accumulate( "HelicityModulus_x", helicity_x );
+  measures.accumulate( "HelicityModulus_y", helicity_y );
+  
 }
 
 /*************************************** printParams() ***************************************/

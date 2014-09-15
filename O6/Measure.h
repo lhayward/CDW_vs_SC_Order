@@ -20,7 +20,7 @@ class Measure
     
   private:
     std::unordered_map<std::string,double> measurements;
-    std::vector<std::string> measStrings;
+    std::vector       <std::string>        measStrings;
     
   public:
     Measure();
