@@ -65,6 +65,9 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           //Add measurement names to Measure object:
           measures.insert("HelicityModulus_x");
           measures.insert("HelicityModulus_y");
+          for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
+          { measures.insert("n[" + std::to_string(i) + "]"); }
+          
         } //if for dimension
         else
         {
@@ -239,14 +242,17 @@ void O6_Model::localUpdate(MTRand* randomGen)
 /************************************* makeMeasurement() *************************************/
 void O6_Model::makeMeasurement()
 {
-  double energyPerSpin = energy_/(1.0*N_);
-  double helicity_x    = getHelicityModulus(0);
-  double helicity_y    = getHelicityModulus(1);
+  double       energyPerSpin = energy_/(1.0*N_);
+  double       helicity_x    = getHelicityModulus(0);
+  double       helicity_y    = getHelicityModulus(1);
+  Vector_NDim* n             = mag_->getMultiple(1.0/N_);
   
   measures.accumulate( "E",   energyPerSpin ) ;
   measures.accumulate( "ESq", pow(energyPerSpin,2) );
   measures.accumulate( "HelicityModulus_x", helicity_x );
   measures.accumulate( "HelicityModulus_y", helicity_y );
+  for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
+  { measures.accumulate("n[" + std::to_string(i) + "]", n->v_[i]); }
   
 }
 
