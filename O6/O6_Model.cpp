@@ -67,6 +67,8 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           measures.insert("HelicityModulus_y");
           for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
           { measures.insert("n[" + std::to_string(i) + "]"); }
+          for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
+          { measures.insert("nSq[" + std::to_string(i) + "]"); }
           
         } //if for dimension
         else
@@ -246,6 +248,9 @@ void O6_Model::makeMeasurement()
   double       helicity_x    = getHelicityModulus(0);
   double       helicity_y    = getHelicityModulus(1);
   Vector_NDim* n             = mag_->getMultiple(1.0/N_);
+  Vector_NDim* nSq           = mag_->getSqComponents();
+        
+  nSq->multiply(1.0/(N_*N_));
   
   measures.accumulate( "E",   energyPerSpin ) ;
   measures.accumulate( "ESq", pow(energyPerSpin,2) );
@@ -253,7 +258,17 @@ void O6_Model::makeMeasurement()
   measures.accumulate( "HelicityModulus_y", helicity_y );
   for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
   { measures.accumulate("n[" + std::to_string(i) + "]", n->v_[i]); }
+  for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
+  { measures.accumulate("nSq[" + std::to_string(i) + "]", nSq->v_[i]); }
   
+  //delete n and nSq:
+  if( n!=NULL )
+  { delete n; }
+  n = NULL;
+  
+  if( nSq!=NULL )
+  { delete nSq; }
+  nSq = NULL;
 }
 
 /*************************************** printParams() ***************************************/

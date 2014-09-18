@@ -39,6 +39,8 @@ class O6_Model : public Model
     
     Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
     VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
+    
+    //observables:
     Vector_NDim*    mag_;   //total magnetization of the spins
     
     double getHelicityModulus(int dir);
