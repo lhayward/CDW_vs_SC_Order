@@ -65,6 +65,10 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           //Add measurement names to Measure object:
           measures.insert("HelicityModulus_x");
           measures.insert("HelicityModulus_y");
+          measures.insert("Ising_m");
+          measures.insert("Ising_mAbs");
+          measures.insert("Ising_mSq");
+          measures.insert("Ising_m^4");
           for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
           { measures.insert("n[" + std::to_string(i) + "]"); }
           for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
@@ -147,6 +151,27 @@ double O6_Model::getHelicityModulus(int dir)
   } //end if
   
   return helicityMod;
+}
+
+/*************************************** getIsingOrder ***************************************/
+double O6_Model::getIsingOrder()
+{
+  double       isingOrderParam=0;
+  Vector_NDim* curr_nSq;  //squared components of spins[i] for a given i
+  
+  for( int i=0; i<N_; i++ )
+  { 
+    curr_nSq = spins_->getSpin(i)->getSqComponents();
+    curr_nSq->multiply(1.0/(N_*N_));
+    
+    isingOrderParam += curr_nSq->v_[2] + curr_nSq->v_[3] - curr_nSq->v_[4] - curr_nSq->v_[5];
+    
+    if( curr_nSq!=NULL )
+    { delete curr_nSq; }
+    curr_nSq=NULL;
+  }
+
+  return isingOrderParam;
 }
 
 /******************************* localUpdate(MTRand* randomGen) ******************************/
@@ -247,15 +272,20 @@ void O6_Model::makeMeasurement()
   double       energyPerSpin = energy_/(1.0*N_);
   double       helicity_x    = getHelicityModulus(0);
   double       helicity_y    = getHelicityModulus(1);
+  double       isingOrder    = getIsingOrder();
   Vector_NDim* n             = mag_->getMultiple(1.0/N_);
   Vector_NDim* nSq           = mag_->getSqComponents();
         
   nSq->multiply(1.0/(N_*N_));
   
-  measures.accumulate( "E",   energyPerSpin ) ;
-  measures.accumulate( "ESq", pow(energyPerSpin,2) );
+  measures.accumulate( "E",                 energyPerSpin ) ;
+  measures.accumulate( "ESq",               pow(energyPerSpin,2) );
   measures.accumulate( "HelicityModulus_x", helicity_x );
   measures.accumulate( "HelicityModulus_y", helicity_y );
+  measures.accumulate( "Ising_m",           isingOrder );
+  measures.accumulate( "Ising_mAbs",        std::abs(isingOrder) );
+  measures.accumulate( "Ising_mSq",         pow(isingOrder,2) );
+  measures.accumulate( "Ising_m^4",         pow(isingOrder,4) );
   for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
   { measures.accumulate("n[" + std::to_string(i) + "]", n->v_[i]); }
   for( uint i=0; i<VECTOR_SPIN_DIM; i++ )

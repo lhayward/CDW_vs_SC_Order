@@ -56,6 +56,3 @@ void Model::setT(double newT)
 /************************************* zeroMeasurements() ************************************/
 void Model::zeroMeasurements()
 { measures.zero(); }
-
-/*********************************** Public Getter Methods: **********************************/
-double Model::getEnergy(){ return energy_; }

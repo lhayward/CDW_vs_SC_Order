@@ -31,7 +31,6 @@ class Model
     virtual ~Model();
     
     //methods implemented in Model class:
-    double getEnergy();
     void   zeroMeasurements();
     
     //methods that can be overwritten by child classes:
