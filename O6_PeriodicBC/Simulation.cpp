@@ -223,7 +223,7 @@ void Simulation::runSim()
         aveHelicityX += getHelicityModulus(0);
         aveHelicityY += getHelicityModulus(1);
         aveM         += isingOrderParam;
-        aveMAbs      += abs(isingOrderParam);
+        aveMAbs      += std::abs(isingOrderParam);
         aveMSq       += pow(isingOrderParam, 2);
         aveM4        += pow(isingOrderParam, 4);
         //avePsiSq     += currPsiSq;

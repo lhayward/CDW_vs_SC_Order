@@ -171,7 +171,7 @@ void Simulation::runSim()
         //aveSF      += getSF();
         //aveSFPhi   += getSFPhi();
         aveM         += isingOrderParam;
-        aveMAbs      += abs(isingOrderParam);
+        aveMAbs      += std::abs(isingOrderParam);
         aveMSq       += pow(isingOrderParam, 2);
         aveM4        += pow(isingOrderParam, 4);
         //avePsiSq     += currPsiSq;
