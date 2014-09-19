@@ -42,6 +42,7 @@ class O6_Model : public Model
     
     double       getHelicityModulus(int dir);
     double       getIsingOrder     ();
+    double       getEnergy         ();
     Vector_NDim* getMagnetization  ();
     uint         uintPower         (uint base, uint exp);
     void         updateObservables ();
@@ -57,7 +58,6 @@ class O6_Model : public Model
     virtual void randomizeLattice   (MTRand* randomGen);
     virtual void setT               (double newT);
     virtual void sweep              (MTRand* randomGen);
-    virtual void updateEnergy       ();
     virtual void writeBin           (int binNum, int numMeas);
 };  
 

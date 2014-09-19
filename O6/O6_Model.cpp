@@ -109,6 +109,72 @@ O6_Model::~O6_Model()
   spins_ = NULL;
 }
 
+/**************************************** getEnergy() ****************************************/
+double O6_Model::getEnergy()
+{
+  Vector_NDim* currSpin;
+  Vector_NDim* neighbour_x;
+  Vector_NDim* neighbour_y;
+  Vector_NDim* neighbour_z;
+  double       energy        = 0;
+  double       sumCDWSqs     = 0;
+  double       energy1       = 0;
+  double       energyLambda  = 0;
+  double       energyg       = 0;
+  double       energygPrime  = 0;
+  double       energyw       = 0;
+  double       energyVz      = 0;
+  double       energyVzPrime = 0;
+  
+  for( uint i=0; i<N_; i++ )
+  { 
+    currSpin    = spins_->getSpin(i);
+    neighbour_x = spins_->getSpin( hrect_->getNeighbour(i,0) ); //nearest neighbour along +x
+    neighbour_y = spins_->getSpin( hrect_->getNeighbour(i,1) ); //nearest neighbour along +y
+    
+    energy1 += currSpin->dotForRange( neighbour_x, 0, 1 ) 
+               + currSpin->dotForRange( neighbour_y, 0, 1 ); 
+    
+    energyLambda += currSpin->dotForRange( neighbour_x, 2, VECTOR_SPIN_DIM-1 ) 
+                    + currSpin->dotForRange( neighbour_y, 2, VECTOR_SPIN_DIM-1 );
+  }
+  energy1 *= -1;
+  energyLambda *= -1*lambda_;
+  
+  for( uint i=0; i<N_; i++ )
+  { 
+    sumCDWSqs = spins_->getSpin(i)->getSquareForRange(2,VECTOR_SPIN_DIM-1); 
+    energyg += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
+  }
+  energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
+  energygPrime *= gPrime_/2.0;
+  
+  for( uint i=0; i<N_; i++ )
+  { energyw += pow( spins_->getSpin(i)->getSquareForRange(2,3), 2.0 ) 
+               + pow( spins_->getSpin(i)->getSquareForRange(4,5), 2.0 ); }
+  energyw *= w_/2.0;
+  
+  //in three dimensions, then also add the energy due to interlayer coupling:
+  if( D_==3 )
+  {
+    for( uint i=0; i<N_; i++ )
+    { 
+      currSpin    = spins_->getSpin(i);
+      neighbour_z = spins_->getSpin( hrect_->getNeighbour(i,2) ); //nearest neighbour along +z
+      
+      energyVz      += currSpin->dotForRange( neighbour_z, 2, VECTOR_SPIN_DIM-1 ); 
+      energyVzPrime += currSpin->dotForRange( neighbour_z, 0, 1 );
+    }
+    energyVz      *= -1*Vz_;
+    energyVzPrime *= -1*VzPrime_;
+  }//if for D_==3
+  
+  energy = J_*(energy1 + energyLambda + energyg + energygPrime + energyw 
+               + energyVz + energyVzPrime);
+  return energy;
+} //getEnergy()
+
 /************************************* getHelicityModulus *************************************
 * Calculates and returns the helicity modulus for the desired lattice directions.
 * Note: dir=0 corresponds to the x-direction
@@ -250,7 +316,6 @@ void O6_Model::localUpdate(MTRand* randomGen)
     spin_old = NULL;
     
     spins_->setSpin( latticeSite, spin_new );
-    energy_ += deltaE;
   }
   //otherwise, the move is rejected:
   else
@@ -274,7 +339,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
 /************************************* makeMeasurement() *************************************/
 void O6_Model::makeMeasurement()
 {
-  double       energyPerSpin = energy_/(1.0*N_);
+  double       energyPerSpin = getEnergy()/(1.0*N_);
   double       helicity_x    = getHelicityModulus(0);
   double       helicity_y    = getHelicityModulus(1);
   double       isingOrder    = getIsingOrder();
@@ -334,7 +399,6 @@ void O6_Model::printSpins()
 void O6_Model::randomizeLattice(MTRand* randomGen)
 { 
   spins_->randomize(randomGen);
-  updateObservables();
 }
 
 /************************************* setT(double newT) *************************************/
@@ -348,7 +412,6 @@ void O6_Model::sweep(MTRand* randomGen)
 {
   for( uint i=0; i<N_; i++ )
   { localUpdate(randomGen); }
-  updateObservables();
 }
 
 /******************************** uintPower(int base, int exp) *******************************/
@@ -360,78 +423,6 @@ uint O6_Model::uintPower(uint base, uint exp)
   
   return result;
 } //uintPower method
-
-/*************************************** updateEnergy() **************************************/
-void O6_Model::updateEnergy()
-{
-  Vector_NDim* currSpin;
-  Vector_NDim* neighbour_x;
-  Vector_NDim* neighbour_y;
-  Vector_NDim* neighbour_z;
-  double       sumCDWSqs     = 0;
-  double       energy1       = 0;
-  double       energyLambda  = 0;
-  double       energyg       = 0;
-  double       energygPrime  = 0;
-  double       energyw       = 0;
-  double       energyVz      = 0;
-  double       energyVzPrime = 0;
-  
-  energy_=0;
-  
-  for( uint i=0; i<N_; i++ )
-  { 
-    currSpin    = spins_->getSpin(i);
-    neighbour_x = spins_->getSpin( hrect_->getNeighbour(i,0) ); //nearest neighbour along +x
-    neighbour_y = spins_->getSpin( hrect_->getNeighbour(i,1) ); //nearest neighbour along +y
-    
-    energy1 += currSpin->dotForRange( neighbour_x, 0, 1 ) 
-               + currSpin->dotForRange( neighbour_y, 0, 1 ); 
-    
-    energyLambda += currSpin->dotForRange( neighbour_x, 2, VECTOR_SPIN_DIM-1 ) 
-                    + currSpin->dotForRange( neighbour_y, 2, VECTOR_SPIN_DIM-1 );
-  }
-  energy1 *= -1;
-  energyLambda *= -1*lambda_;
-  
-  for( uint i=0; i<N_; i++ )
-  { 
-    sumCDWSqs = spins_->getSpin(i)->getSquareForRange(2,VECTOR_SPIN_DIM-1); 
-    energyg += sumCDWSqs;
-    energygPrime += pow(sumCDWSqs,2.0);
-  }
-  energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
-  energygPrime *= gPrime_/2.0;
-  
-  for( uint i=0; i<N_; i++ )
-  { energyw += pow( spins_->getSpin(i)->getSquareForRange(2,3), 2.0 ) 
-               + pow( spins_->getSpin(i)->getSquareForRange(4,5), 2.0 ); }
-  energyw *= w_/2.0;
-  
-  //in three dimensions, then also add the energy due to interlayer coupling:
-  if( D_==3 )
-  {
-    for( uint i=0; i<N_; i++ )
-    { 
-      currSpin    = spins_->getSpin(i);
-      neighbour_z = spins_->getSpin( hrect_->getNeighbour(i,2) ); //nearest neighbour along +z
-      
-      energyVz      += currSpin->dotForRange( neighbour_z, 2, VECTOR_SPIN_DIM-1 ); 
-      energyVzPrime += currSpin->dotForRange( neighbour_z, 0, 1 );
-    }
-    energyVz      *= -1*Vz_;
-    energyVzPrime *= -1*VzPrime_;
-  }//if for D_==3
-  
-  energy_ = J_*(energy1 + energyLambda + energyg + energygPrime + energyw 
-                + energyVz + energyVzPrime);
-}
-
-/************************************ updateObservables() ************************************/
-void O6_Model::updateObservables()
-{
-  updateEnergy();
-}
 
 /***************************** writeBin(int binNum, int numMeas) *****************************/
 void O6_Model::writeBin(int binNum, int numMeas)

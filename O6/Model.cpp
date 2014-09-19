@@ -29,7 +29,6 @@ Model::Model(std::ifstream* fin, std::string outFileName)
   fout.open(outFileName.c_str());
   fout.precision(15);
   
-  energy_=0;
   //initialize the temperature (should be changed by user to desired temperature before
   //starting the simulation):
   T_ = 1.0;

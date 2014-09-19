@@ -22,7 +22,6 @@ class Model
   protected:
     double        J_;       //coupling 
     double        T_;       //current temperature
-    double        energy_;  //current energy
     Measure       measures; //observables to record
     std::ofstream fout;
     
@@ -43,7 +42,6 @@ class Model
     virtual void printSpins         () = 0;
     virtual void randomizeLattice   (MTRand* randomGen) = 0;
     virtual void sweep              (MTRand* randomGen) = 0;
-    virtual void updateEnergy       () = 0;
     virtual void writeBin           (int binNum, int numMeas) = 0;
 };
 
