@@ -57,8 +57,6 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
             VzPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
           } //if for D_==3
           
-          mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0);
-          
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
           
@@ -109,10 +107,6 @@ O6_Model::~O6_Model()
   if( spins_ != NULL )
   { delete spins_; }
   spins_ = NULL;
-  
-  if( mag_ != NULL )
-  { delete mag_; }
-  mag_ = NULL;
 }
 
 /************************************* getHelicityModulus *************************************
@@ -172,6 +166,17 @@ double O6_Model::getIsingOrder()
   }
 
   return isingOrderParam;
+}
+
+/************************************* getMagnetization() ************************************/
+Vector_NDim* O6_Model::getMagnetization()
+{
+  Vector_NDim* mag = new Vector_NDim(VECTOR_SPIN_DIM,0);
+  
+  for( uint i=0; i<N_; i++ )
+  { mag->add( spins_->getSpin(i) ); }
+  
+  return mag;
 }
 
 /******************************* localUpdate(MTRand* randomGen) ******************************/
@@ -273,9 +278,10 @@ void O6_Model::makeMeasurement()
   double       helicity_x    = getHelicityModulus(0);
   double       helicity_y    = getHelicityModulus(1);
   double       isingOrder    = getIsingOrder();
-  Vector_NDim* n             = mag_->getMultiple(1.0/N_);
-  Vector_NDim* nSq           = mag_->getSqComponents();
-        
+  Vector_NDim* n             = getMagnetization();
+  Vector_NDim* nSq           = n->getSqComponents();
+  
+  n->multiply(1.0/N_);     
   nSq->multiply(1.0/(N_*N_));
   
   measures.accumulate( "E",                 energyPerSpin ) ;
@@ -425,19 +431,6 @@ void O6_Model::updateEnergy()
 void O6_Model::updateObservables()
 {
   updateEnergy();
-  updateMagnetization();
-}
-
-/*********************************** updateMagnetization() ***********************************/
-void O6_Model::updateMagnetization()
-{
-  if( mag_ != NULL )
-  { mag_->clear(); }
-  else
-  { mag_ = new Vector_NDim(VECTOR_SPIN_DIM,0); }
-  
-  for( uint i=0; i<N_; i++ )
-  { mag_->add( spins_->getSpin(i) ); }
 }
 
 /***************************** writeBin(int binNum, int numMeas) *****************************/

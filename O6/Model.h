@@ -44,7 +44,6 @@ class Model
     virtual void randomizeLattice   (MTRand* randomGen) = 0;
     virtual void sweep              (MTRand* randomGen) = 0;
     virtual void updateEnergy       () = 0;
-    virtual void updateMagnetization() = 0;
     virtual void writeBin           (int binNum, int numMeas) = 0;
 };
 

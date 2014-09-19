@@ -40,13 +40,11 @@ class O6_Model : public Model
     Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
     VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
     
-    //observables:
-    Vector_NDim*    mag_;   //total magnetization of the spins
-    
-    double getHelicityModulus(int dir);
-    double getIsingOrder();
-    uint   uintPower         (uint base, uint exp);
-    void   updateObservables ();
+    double       getHelicityModulus(int dir);
+    double       getIsingOrder     ();
+    Vector_NDim* getMagnetization  ();
+    uint         uintPower         (uint base, uint exp);
+    void         updateObservables ();
     
   public:
     O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);
@@ -60,7 +58,6 @@ class O6_Model : public Model
     virtual void setT               (double newT);
     virtual void sweep              (MTRand* randomGen);
     virtual void updateEnergy       ();
-    virtual void updateMagnetization();
     virtual void writeBin           (int binNum, int numMeas);
 };  
 
