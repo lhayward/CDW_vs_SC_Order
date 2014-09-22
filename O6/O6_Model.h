@@ -40,12 +40,20 @@ class O6_Model : public Model
     Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
     VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
     
-    double       getHelicityModulus(int dir);
-    double       getIsingOrder     ();
-    double       getEnergy         ();
-    Vector_NDim* getMagnetization  ();
-    uint         uintPower         (uint base, uint exp);
-    void         updateObservables ();
+    bool*           inCluster_;  //boolean array for wolffUpdate indicating whether or not each
+                                 //spin is in the cluster (redundant information to cluster 
+                                 //vec, but stored for efficiency purposes)
+    
+    void         clearCluster          (std::vector<uint>* cluster);
+    void         flipCluster           (std::vector<uint>* cluster, Vector_NDim* r);
+    double       getClusterOnSiteEnergy(std::vector<uint>* cluster);
+    double       getEnergy             ();
+    double       getHelicityModulus    (int dir);
+    double       getIsingOrder         ();
+    Vector_NDim* getMagnetization      ();
+    uint         uintPower             (uint base, uint exp);
+    void         updateObservables     ();
+    void         wolffUpdate           (MTRand* randomGen);
     
   public:
     O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <typeinfo>
+#include <vector>
 #include "FileReading.h"
 #include "O6_Model.h"
 
@@ -60,6 +61,10 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
           
+          inCluster_ = new bool[N_];
+          for( uint i=0; i<N_; i++ )
+          { inCluster_[i] = 0; }
+          
           //Add measurement names to Measure object:
           measures.insert("HelicityModulus_x");
           measures.insert("HelicityModulus_y");
@@ -107,15 +112,76 @@ O6_Model::~O6_Model()
   if( spins_ != NULL )
   { delete spins_; }
   spins_ = NULL;
-}
+  
+  if( inCluster_ != NULL )
+  { delete[] inCluster_; }
+  inCluster_ = NULL;
+} //destructor
+
+/*************************************** clearCluster ***************************************/ 
+void O6_Model::clearCluster(std::vector<uint>* cluster)
+{
+  uint clustSize = (uint)cluster->size();
+  
+  for( uint i=0; i<clustSize; i++ )
+  { inCluster_[(*cluster)[i]]=0; }
+  
+  //test to make sure the inCluster_ array was properly cleared (for testing purposes only):
+  /*for( uint i=0; i<N_; i++ )
+  {
+    if( inCluster_[i]==1 )
+    { std::cout << "*** 1 ***" << std::endl; }
+  }*/
+} //clearCluster
+
+/**************************************** flipCluster *****************************************
+* This function flips all spins in the passed cluster by using the passed vector r.
+**********************************************************************************************/
+void O6_Model::flipCluster(std::vector<uint>* cluster, Vector_NDim* r)
+{
+  uint clustSize = (uint)cluster->size();
+  
+  for( uint i=0; i<clustSize; i++ )
+  { spins_->getSpin((*cluster)[i])->reflectAndNormalize(r); }
+} //flipCluster
+
+/*********************************** getClusterOnSiteEnergy ***********************************
+* This function calculates the onsite (non-interacting) part of the energy corresponding to 
+* the spins in the passed cluster.
+**********************************************************************************************/
+double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
+{
+  uint         clustSize = (uint)cluster->size();
+  uint         latticeSite;
+  double       sumCDWSqs=0;
+  double       energyg=0;
+  double       energygPrime=0;
+  double       energyw=0;
+  Vector_NDim* currSpin;
+  
+  for( uint i=0; i<clustSize; i++ )
+  {
+    latticeSite = (*cluster)[i];
+    currSpin    = spins_->getSpin(latticeSite);
+    
+    sumCDWSqs = currSpin->getSquareForRange( 2, VECTOR_SPIN_DIM-1 );
+    
+    energyg      += sumCDWSqs;
+    energygPrime += pow(sumCDWSqs,2.0);
+    energyw      += pow(currSpin->getSquareForRange(2,3),2.0) 
+                    + pow(currSpin->getSquareForRange(4,5),2.0);
+  } //for loop
+  
+  energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
+  energygPrime *= gPrime_/2.0;
+  energyw *= w_/2.0;
+  
+  return J_*(energyg + energygPrime + energyw);
+} //getClusterOnSiteEnergy
 
 /**************************************** getEnergy() ****************************************/
 double O6_Model::getEnergy()
 {
-  Vector_NDim* currSpin;
-  Vector_NDim* neighbour_x;
-  Vector_NDim* neighbour_y;
-  Vector_NDim* neighbour_z;
   double       energy        = 0;
   double       sumCDWSqs     = 0;
   double       energy1       = 0;
@@ -125,6 +191,10 @@ double O6_Model::getEnergy()
   double       energyw       = 0;
   double       energyVz      = 0;
   double       energyVzPrime = 0;
+  Vector_NDim* currSpin;
+  Vector_NDim* neighbour_x;
+  Vector_NDim* neighbour_y;
+  Vector_NDim* neighbour_z;
   
   for( uint i=0; i<N_; i++ )
   { 
@@ -285,7 +355,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
   }
   
   oldCDWSumSqs = spin_old->getSquareForRange( 2, VECTOR_SPIN_DIM-1 );
-  newCDWSumSqs = spin_new->getSquareForRange( 2,VECTOR_SPIN_DIM-1 );
+  newCDWSumSqs = spin_new->getSquareForRange( 2, VECTOR_SPIN_DIM-1 );
   
   //calculate the energy change for the proposed move:
   deltaE = J_*( -1*( nnSum_xy->dotForRange(spin_new,0,1) 
@@ -412,6 +482,18 @@ void O6_Model::sweep(MTRand* randomGen)
 {
   for( uint i=0; i<N_; i++ )
   { localUpdate(randomGen); }
+  
+  uint N1 = N_/2;     //number of local updates before Wolff step
+  uint N2 = N_ - N1;  //number of local updates after Wolff step
+  
+  for( uint i=0; i<N1; i++ )
+  { localUpdate(randomGen); }
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen); }
+  
+  for( uint i=0; i<N2; i++ )
+  { localUpdate(randomGen); }
 }
 
 /******************************** uintPower(int base, int exp) *******************************/
@@ -423,6 +505,110 @@ uint O6_Model::uintPower(uint base, uint exp)
   
   return result;
 } //uintPower method
+
+/******************************* wolffUpdate(MTRand* randomGen) ******************************/
+void O6_Model::wolffUpdate(MTRand* randomGen)
+{
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  {
+    const uint         dir_z = 2;
+  
+    uint               latticeSite;
+    uint               neighSite;
+    double             PAdd;
+    double             exponent;  //exponent for PAdd
+    double             onsiteEnergy_initial;
+    double             onsiteEnergy_final;
+    double             onsiteEnergy_diff;
+    double             PAcceptCluster;
+    Vector_NDim*       r = new Vector_NDim(VECTOR_SPIN_DIM,randomGen);
+    Vector_NDim*       reflectedSpin;
+    std::vector<uint>* buffer;  //indices of spins to try to add to cluster (will loop until 
+                                //buffer is empty)
+    std::vector<uint>* cluster; //vector storing the indices of spins in the cluster
+  
+    //initialize the cluster and buffer
+    cluster  = new std::vector<uint>;
+    buffer   = new std::vector<uint>;
+  
+    latticeSite = randomGen->randInt(N_-1);
+    //flipSpin(latticeSite, r);  //don't flip yet for efficiency
+    inCluster_[latticeSite] = 1;
+    cluster->push_back(latticeSite);
+    buffer->push_back(latticeSite);
+  
+    while( !buffer->empty() )
+    {
+      latticeSite = buffer->back();
+      buffer->pop_back();
+      for( uint i=0; i<(2*D_); i++ )
+      {
+        neighSite = hrect_->getNeighbour( latticeSite, i );
+        
+        //Note: the spin at site 'latticeSite' is not flipped yet so we have to consider the
+        //      energy difference that would result if it were already flipped:
+        reflectedSpin = spins_->getSpin(latticeSite)->getReflectionAndNormalize(r);
+        
+        //define the exponent based on whether the bond is in the xy-plane or in z-direction:
+        exponent = r->dot(reflectedSpin)
+                   *r->dot( spins_->getSpin( hrect_->getNeighbour(latticeSite, i) ) );
+        if( D_==3 && ( ( i==dir_z ) || ( i==(dir_z+D_) ) ) )
+        { exponent = (2.0*J_*Vz_/T_)*exponent; }
+        else
+        { exponent = (2.0*J_/T_)*exponent; }
+        
+        if (exponent < 0 )
+        { 
+          PAdd = 1.0 - exp(exponent);
+          if( !( inCluster_[ neighSite ] ) && (randomGen->randDblExc() < PAdd) )
+          { 
+            //flipSpin(neighbours[site][i],r); 
+            inCluster_[ neighSite ] = 1;
+            cluster->push_back( neighSite );
+            buffer ->push_back( neighSite );
+          }
+        }
+      
+        if(reflectedSpin!=NULL)
+        { delete reflectedSpin; }
+        reflectedSpin = NULL;
+      }  //for loop over neighbours
+    } //while loop for buffer
+  
+    //flip the cluster if it is accepted:
+    onsiteEnergy_initial = getClusterOnSiteEnergy(cluster);
+    flipCluster(cluster, r); //flip in order to calculate the final energy
+    onsiteEnergy_final = getClusterOnSiteEnergy(cluster);
+    onsiteEnergy_diff = onsiteEnergy_final - onsiteEnergy_initial;
+  
+    //If the onsite energy diff. is negative, accept the cluster move. If the onsite energy 
+    //diff. is positive, accept the cluster move with probability exp^(-beta*onsiteEnery_diff).
+    //Note: cluster is already flipped currently, so this is a check to see if we need to flip 
+    //      it back:
+    if( onsiteEnergy_diff > 0 )
+    {
+      PAcceptCluster = exp(-1.0*onsiteEnergy_diff/T_);
+      //check if we need to flip the cluster back to its original orientation:
+      if( randomGen->randDblExc() > PAcceptCluster )
+      { flipCluster(cluster, r); }
+    }
+  
+    clearCluster(cluster);
+  
+    if(r!=NULL)
+    { delete r; }
+    r = NULL;
+    
+    if(cluster!=NULL)
+    { delete cluster; }
+    cluster=NULL;
+    
+    if(buffer!=NULL)
+    { delete buffer; }
+    buffer=NULL;
+    
+  } //if for lambda_=1 and VzPrime_=Vz_
+} //wolffUpdate()
 
 /***************************** writeBin(int binNum, int numMeas) *****************************/
 void O6_Model::writeBin(int binNum, int numMeas)
