@@ -479,10 +479,7 @@ void O6_Model::setT(double newT)
 
 /********************************** sweep(MTRand* randomGen) *********************************/
 void O6_Model::sweep(MTRand* randomGen)
-{
-  for( uint i=0; i<N_; i++ )
-  { localUpdate(randomGen); }
-  
+{ 
   uint N1 = N_/2;     //number of local updates before Wolff step
   uint N2 = N_ - N1;  //number of local updates after Wolff step
   
