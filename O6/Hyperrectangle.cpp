@@ -62,7 +62,7 @@ Hyperrectangle::~Hyperrectangle()
 /******************************** getNeighbour(uint i, uint j) *******************************/
 uint Hyperrectangle::getNeighbour(uint i, uint j)
 {
-  uint result = 0;
+  /*uint result = 0;
   
   if( (neighbours_ != NULL) && i<N_ && j<(2*D_) )
   { result = neighbours_[i][j]; }
@@ -72,7 +72,8 @@ uint Hyperrectangle::getNeighbour(uint i, uint j)
               << "array or index out of bounds" << std::endl; 
   }
   
-  return result;
+  return result;*/
+  return neighbours_[i][j];
 }
 
 /************************************** initNeighbours() *************************************/

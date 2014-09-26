@@ -48,7 +48,7 @@ int main(int argc, char** argv)
   string        outFileName;
   time_t        sec1, sec2;
   
-  std::cout.precision(20);
+  std::cout.precision(15);
   
   //variables to be read from file (values here are default values): 
   double          J=2.0, lambda=1, g=0, gPrime, w=0;
@@ -63,6 +63,7 @@ int main(int argc, char** argv)
   std::cout << inFileName << std::endl;
   
   std::cout << "\n***STARTING SIMULATION***\n" << std::endl;
+  sec1 = time (NULL);
   
   readInput(inFileName.c_str(), &J, &lambda, &g, &gPrime, &w, TList, &LMin, &LMax, &LSteps, 
             &randomSeed, &numWarmUpSweeps, &sweepsPerMeas, &measPerBin, &numBins);
@@ -98,16 +99,15 @@ int main(int argc, char** argv)
     std::cout << "OUTFILE = " << outFileName<< std::endl;
     sim = new Simulation(J, lambda, g, gPrime, w, TList, L, randomGen, numWarmUpSweeps, 
                          sweepsPerMeas, measPerBin, numBins, outFileName.c_str());
-    sec1 = time (NULL);
     sim->runSim();
-    sec2 = time(NULL);
-    std::cout << "Time for L = " << L << ": " << (sec2 - sec1) << " seconds" << std::endl;
     
     if(sim!=NULL)
     { delete sim; }
     sim = NULL;
   }
   
+  sec2 = time(NULL);
+  std::cout << "Time: " << (sec2 - sec1) << " seconds" << std::endl;
   std::cout << "\n***END OF SIMULATION***\n" << std::endl;
   return 0;
 } //closes main

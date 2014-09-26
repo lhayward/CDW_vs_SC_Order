@@ -20,7 +20,7 @@ public:
   typedef unsigned int  uint;
   
 private:
-  static const bool    MEASURE_CORRELATIONS=true;
+  static const bool    MEASURE_CORRELATIONS=false;
   static const bool    PRINT_CONFIGS=false;
   
   double               J,lambda,g,gPrime,w,T;

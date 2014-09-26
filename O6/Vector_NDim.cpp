@@ -140,10 +140,10 @@ double Vector_NDim::dotForRange(Vector_NDim* vec2, uint start, uint end)
   uint index1=start;
   uint index2=end;
   
-  if(index1 >= N_)
+  /*if(index1 >= N_)
   { index1 = (N_-1); }
   if(index2 >= N_)
-  { index2 = (N_-1); }
+  { index2 = (N_-1); }*/
   
   for( uint i=index1; i<=index2; i++ )
   { result += v_[i]*vec2->v_[i]; } 
@@ -177,7 +177,7 @@ Vector_NDim* Vector_NDim::getMultiple(double c)
 Vector_NDim* Vector_NDim::getReflectionAndNormalize(Vector_NDim* r)
 {
   Vector_NDim* result = new Vector_NDim(N_, this);
-  result->reflectAndNormalize(r);
+  result->reflectOverUnitVecAndNormalize(r);
   return result;
 }
 
@@ -199,10 +199,10 @@ double Vector_NDim::getSquareForRange(uint start, uint end)
   uint index1=start;
   uint index2=end;
   
-  if(index1 >= N_)
+  /*if(index1 >= N_)
   { index1 = (N_-1); }
   if(index2 >= N_)
-  { index2 = (N_-1); }
+  { index2 = (N_-1); }*/
   
   for( uint i=index1; i<=index2; i++ )
   { result += pow(v_[i],2); }
@@ -246,14 +246,20 @@ void Vector_NDim::print()
   std::cout << v_[N_-1] << " ]" << std::endl;
 }
 
-/************************************ reflectAndNormalize ************************************/
-void Vector_NDim::reflectAndNormalize(Vector_NDim* r)
+/******************************* reflectOverUnitVecAndNormalize *******************************
+* Note that the passed 'r' must be a unit vector (could write this method for general, non-unit
+* 'r' (see commented out code with 'rSq'), but it is much slower. 
+**********************************************************************************************/
+void Vector_NDim::reflectOverUnitVecAndNormalize(Vector_NDim* r)
 {
   double dotProd = dot(r); 
-  double rSq     = r->getSquare();
+  //double rSq     = r->getSquare();
   
   for( uint i=0; i<N_; i++ )
-  { v_[i] = v_[i] - (2.0*dotProd/rSq)*r->v_[i]; }
+  { 
+    //v_[i] = v_[i] - (2.0*dotProd/rSq)*r->v_[i]; 
+    v_[i] = v_[i] - (2.0*dotProd)*r->v_[i];
+  }
   
   //ensure that the norm is still one (helps avoid rounding errors building up when the vector
   //is supposed to be a unit vector):

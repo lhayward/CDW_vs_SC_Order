@@ -36,11 +36,12 @@ Model* readModel(std::string modelName, std::string inFileName, std::string star
 **********************************************************************************************/
 int main(int argc, char** argv) 
 {
-  MTRand randomGen;
+  MTRand         randomGen;
   SimParameters* params;
-  Lattice* lattice;
-  Model* model;
-  double T; //current temperature
+  Lattice*       lattice;
+  Model*         model;
+  double         T; //current temperature
+  time_t         sec1, sec2;  //for timing
   
   //variables related to input/output data from/to files:
   std::string fileSuffix      = getFileSuffix( argc, argv );
@@ -64,6 +65,7 @@ int main(int argc, char** argv)
   model->printParams();
   
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
+  sec1 = time (NULL);
   //loop over the different temperatures:
   for( uint TIndex=0; TIndex<(params->TList_->size()); TIndex++)
   {
@@ -97,6 +99,8 @@ int main(int argc, char** argv)
     std::cout << std::endl;
   } //temperature loop 
   
+  sec2 = time(NULL);
+  std::cout << "Time: " << (sec2 - sec1) << " seconds" << std::endl;
   std::cout << "\n*** END OF SIMULATION ***\n" << std::endl;
   return 0;
 } //closes main

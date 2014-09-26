@@ -40,7 +40,7 @@ VectorSpins::~VectorSpins()
 /*************************************** getSpin(int i) **************************************/
 Vector_NDim* VectorSpins::getSpin(uint i)
 {
-  Vector_NDim* result = NULL;
+  /*Vector_NDim* result = NULL;
   
   if( (spins_ != NULL) && i<N_ )
   { result = spins_[i]; }
@@ -50,7 +50,8 @@ Vector_NDim* VectorSpins::getSpin(uint i)
               << "out of bounds" << std::endl; 
   }
   
-  return result;
+  return result;*/
+  return spins_[i];
 }
 
 /****************************************** print() ******************************************/
@@ -81,11 +82,12 @@ void VectorSpins::randomize(MTRand* randomGen)
 /*************************** setSpin(uint i, Vector_NDim* newSpin) ***************************/
 void VectorSpins::setSpin(uint i, Vector_NDim* newSpin)
 {
-  if( (newSpin != NULL) && i<N_ )
+  /*if( (newSpin != NULL) && i<N_ )
   { spins_[i] = newSpin; }
   else
   { 
     std::cout << "ERROR in VectorSpins::setSpin(uint i, Vector_NDim* newSpin): NULL"
               << " Vector_NDim object passed or index out of bounds" << std::endl; 
-  }
+  }*/
+  spins_[i] = newSpin;
 }

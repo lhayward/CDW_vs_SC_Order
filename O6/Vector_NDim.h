@@ -39,7 +39,7 @@ class Vector_NDim
     void         multiply(double c);
     void         normalize();
     void         print();
-    void         reflectAndNormalize(Vector_NDim* r);
+    void         reflectOverUnitVecAndNormalize(Vector_NDim* r);
     void         subtract(Vector_NDim* vec2);
 };
 

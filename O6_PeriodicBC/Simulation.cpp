@@ -40,6 +40,8 @@ Simulation::Simulation(double J, double lambda, double g, double gPrime, double 
   this->outputFileName  = outputFileName;
   
   spins = new VecND*[N];
+  for( int i=0; i<N; i++ )
+  { spins[i] = NULL; }
 
   randomizeLattice();
   
@@ -114,7 +116,7 @@ void Simulation::runSim()
   VecND* avenSq  = new VecND(spinDim,0);
   
   outFile.open(outputFileName);
-  outFile.precision(20);
+  outFile.precision(15);
   
   correlationsFileName = "correlations_" + correlationsFileName;
   configsFileName      = "configs_"      + configsFileName;
@@ -134,7 +136,7 @@ void Simulation::runSim()
   if( MEASURE_CORRELATIONS )
   {
     outFileCorrelations.open(correlationsFileName.c_str());
-    outFileCorrelations.precision(20);
+    outFileCorrelations.precision(15);
   
     for( int i=0; i<N; i++ )
     {
@@ -151,7 +153,7 @@ void Simulation::runSim()
   if( PRINT_CONFIGS )
   {
     outFileConfigs.open(configsFileName.c_str());
-    outFileConfigs.precision(20);
+    outFileConfigs.precision(15);
   } //if for PRINT_CONFIGS
   
   //loop over all temperatures:
