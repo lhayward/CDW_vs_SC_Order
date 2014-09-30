@@ -30,7 +30,7 @@ VectorSpins::~VectorSpins()
 { 
   if( spins_!=NULL)
   {
-    for( int i=0; i<N_; i++ )
+    for( uint i=0; i<N_; i++ )
     { delete spins_[i]; }
     delete[] spins_;
   }

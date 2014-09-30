@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
 #include <vector>
@@ -25,6 +26,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
   : Model(fin, outFileName)
 {
   const char EQUALS_CHAR = '=';
+  std::stringstream ss;
   
   std::cout.precision(15);
   
@@ -73,9 +75,17 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           measures.insert("Ising_mSq");
           measures.insert("Ising_m^4");
           for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
-          { measures.insert("n[" + std::to_string(i) + "]"); }
+          { 
+            ss.str("");
+            ss << "n[" << i << "]";
+            measures.insert(ss.str()); 
+          }
           for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
-          { measures.insert("nSq[" + std::to_string(i) + "]"); }
+          { 
+            ss.str("");
+            ss << "nSq[" << i << "]";
+            measures.insert(ss.str()); 
+          }
           
         } //if for dimension
         else
@@ -268,7 +278,7 @@ double O6_Model::getHelicityModulus(int dir)
      sum2=0;
      
      //loop over all spins:
-     for(int i=0; i<N_; i++)
+     for(uint i=0; i<N_; i++)
      {
       currSpin = spins_->getSpin(i);
       neigh    = spins_->getSpin( hrect_->getNeighbour(i,dir) ); //nearest neighbour along +x
@@ -289,7 +299,7 @@ double O6_Model::getIsingOrder()
   double       isingOrderParam=0;
   Vector_NDim* curr_nSq;  //squared components of spins[i] for a given i
   
-  for( int i=0; i<N_; i++ )
+  for( uint i=0; i<N_; i++ )
   { 
     curr_nSq = spins_->getSpin(i)->getSqComponents();
     curr_nSq->multiply(1.0/(N_*N_));
@@ -340,7 +350,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
   
   //loop to calculate the nearest neighbour sum for the xy-plane:
   nnSum_xy = new Vector_NDim(VECTOR_SPIN_DIM, 0);
-  for( int i=dir_x; i<=dir_y; i++ )
+  for( uint i=dir_x; i<=dir_y; i++ )
   { 
     nnSum_xy->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, i    ) ) ); 
     nnSum_xy->add( spins_->getSpin( hrect_->getNeighbour( latticeSite, i+D_ ) ) );
@@ -409,12 +419,13 @@ void O6_Model::localUpdate(MTRand* randomGen)
 /************************************* makeMeasurement() *************************************/
 void O6_Model::makeMeasurement()
 {
-  double       energyPerSpin = getEnergy()/(1.0*N_);
-  double       helicity_x    = getHelicityModulus(0);
-  double       helicity_y    = getHelicityModulus(1);
-  double       isingOrder    = getIsingOrder();
-  Vector_NDim* n             = getMagnetization();
-  Vector_NDim* nSq           = n->getSqComponents();
+  double            energyPerSpin = getEnergy()/(1.0*N_);
+  double            helicity_x    = getHelicityModulus(0);
+  double            helicity_y    = getHelicityModulus(1);
+  double            isingOrder    = getIsingOrder();
+  std::stringstream ss;
+  Vector_NDim*      n             = getMagnetization();
+  Vector_NDim*      nSq           = n->getSqComponents();
   
   n->multiply(1.0/N_);     
   nSq->multiply(1.0/(N_*N_));
@@ -428,9 +439,17 @@ void O6_Model::makeMeasurement()
   measures.accumulate( "Ising_mSq",         pow(isingOrder,2) );
   measures.accumulate( "Ising_m^4",         pow(isingOrder,4) );
   for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
-  { measures.accumulate("n[" + std::to_string(i) + "]", n->v_[i]); }
+  { 
+    ss.str("");
+    ss << "n[" << i << "]";
+    measures.accumulate(ss.str(), n->v_[i]); 
+  }
   for( uint i=0; i<VECTOR_SPIN_DIM; i++ )
-  { measures.accumulate("nSq[" + std::to_string(i) + "]", nSq->v_[i]); }
+  { 
+    ss.str("");
+    ss << "nSq[" << i << "]";
+    measures.accumulate(ss.str(), nSq->v_[i]); 
+  }
   
   //delete n and nSq:
   if( n!=NULL )

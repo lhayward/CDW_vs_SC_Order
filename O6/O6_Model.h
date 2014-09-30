@@ -21,7 +21,7 @@ class O6_Model : public Model
     typedef unsigned int  uint;
     
   private:
-    static const int VECTOR_SPIN_DIM = 6; //dimensionality of the spins on the lattice
+    static const uint VECTOR_SPIN_DIM = 6; //dimensionality of the spins on the lattice
     
     //parameters in the O(6) model:
     double  lambda_;  //helicity modulus for spatial variations of the CDW order

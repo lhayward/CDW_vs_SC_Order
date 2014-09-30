@@ -1,5 +1,5 @@
 CC = g++ 
-CFLAGS = -std=c++11 -Wall -funroll-loops #-pg #-xHOST # -O3
+CFLAGS = -std=c++0x -Wall -funroll-loops #-pg #-xHOST # -O3
 
 PROG = o6
 HDRS = MersenneTwister.h FileReading.h Hyperrectangle.h Lattice.h Measure.h Model.h O6_Model.h SimParameters.h Vector_NDim.h VectorSpins.h
