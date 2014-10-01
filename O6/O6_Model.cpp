@@ -537,22 +537,29 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
     double             onsiteEnergy_final;
     double             onsiteEnergy_diff;
     double             PAcceptCluster;
+    double             rDotRef;
     Vector_NDim*       r = new Vector_NDim(VECTOR_SPIN_DIM,randomGen);
-    Vector_NDim*       reflectedSpin;
+    Vector_NDim*       reflectedSpin = NULL;
     std::vector<uint>  buffer;  //indices of spins to try to add to cluster (will loop until 
                                 //buffer is empty)
     std::vector<uint>  cluster; //vector storing the indices of spins in the cluster
-  
+    
     latticeSite = randomGen->randInt(N_-1);
     //flipSpin(latticeSite, r);  //don't flip yet for efficiency
     inCluster_[latticeSite] = 1;
     cluster.push_back(latticeSite);
     buffer.push_back(latticeSite);
-  
+    
     while( !buffer.empty() )
     {
       latticeSite = buffer.back();
       buffer.pop_back();
+      
+      //Note: the spin at site 'latticeSite' is not flipped yet so we have to consider the
+      //      energy difference that would result if it were already flipped:
+      reflectedSpin = spins_->getSpin(latticeSite)->getReflectionAndNormalize(r);
+      rDotRef       = r->dot(reflectedSpin);
+      
       for( uint i=0; i<(2*D_); i++ )
       {
         neighSite = hrect_->getNeighbour( latticeSite, i );
@@ -564,13 +571,8 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
         //if(i==2)
         //{ neighSite = hrect_->getNeighbour( latticeSite, 1 ); }
         
-        //Note: the spin at site 'latticeSite' is not flipped yet so we have to consider the
-        //      energy difference that would result if it were already flipped:
-        reflectedSpin = spins_->getSpin(latticeSite)->getReflectionAndNormalize(r);
-        
         //define the exponent based on whether the bond is in the xy-plane or in z-direction:
-        exponent = r->dot(reflectedSpin)
-                   *r->dot( spins_->getSpin( neighSite ) );
+        exponent = rDotRef*r->dot( spins_->getSpin( neighSite ) );
         if( D_==3 && ( ( i==dir_z ) || ( i==(dir_z+D_) ) ) )
         { exponent = (2.0*J_*Vz_/T_)*exponent; }
         else
@@ -587,19 +589,21 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
             buffer.push_back( neighSite );
           }
         }
-      
-        if(reflectedSpin!=NULL)
-        { delete reflectedSpin; }
-        reflectedSpin = NULL;
       }  //for loop over neighbours
+      
+      if(reflectedSpin!=NULL)
+      { delete reflectedSpin; }
+      reflectedSpin = NULL;
+      
     } //while loop for buffer
-  
+    
+    
     //flip the cluster if it is accepted:
     onsiteEnergy_initial = getClusterOnSiteEnergy(&cluster);
     flipCluster(&cluster, r); //flip in order to calculate the final energy
     onsiteEnergy_final = getClusterOnSiteEnergy(&cluster);
     onsiteEnergy_diff = onsiteEnergy_final - onsiteEnergy_initial;
-  
+    
     //If the onsite energy diff. is negative, accept the cluster move. If the onsite energy 
     //diff. is positive, accept the cluster move with probability exp^(-beta*onsiteEnery_diff).
     //Note: cluster is already flipped currently, so this is a check to see if we need to flip 
@@ -611,9 +615,9 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
       if( randomGen->randDblExc() > PAcceptCluster )
       { flipCluster(&cluster, r); }
     }
-  
+    
     clearCluster(&cluster);
-  
+    
     if(r!=NULL)
     { delete r; }
     r = NULL;
