@@ -47,8 +47,13 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
         //This model only works in two or three dimension:
         if( D_==2 || D_==3 )
         {
-          L_  = hrect_->getL();
-          N_  = hrect_->getN();
+          L_ = hrect_->getL();
+          N_ = hrect_->getN();
+          
+          //The following 2 statements are true when D=2 (will fix for D=3 case in the 
+          //if statement below):
+          Lz_  = 1;
+          Nxy_ = N_;
           
           Vz_      = 0;
           VzPrime_ = 0;
@@ -58,6 +63,8 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           {
             Vz_      = FileReading::readDouble(fin, EQUALS_CHAR);
             VzPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
+            Lz_      = L_[2];
+            Nxy_     = N_/Lz_;
           } //if for D_==3
           
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
@@ -273,7 +280,6 @@ double O6_Model::getHelicityModulus(int dir)
   //compute the helicity modulus if a valid direction was passed (otherwise just return 0):
   if( dir==0 || dir==1 || (dir==2 && D_==3) )
   {
-     //neighDir = 2*dir;  //0 if x-direction (dir=0), 2 if y-direction (dir=1)
      sum1=0;
      sum2=0;
      
@@ -302,7 +308,7 @@ double O6_Model::getIsingOrder()
   for( uint i=0; i<N_; i++ )
   { 
     curr_nSq = spins_->getSpin(i)->getSqComponents();
-    curr_nSq->multiply(1.0/(N_*N_));
+    curr_nSq->multiply(1.0/N_);
     
     isingOrderParam += curr_nSq->v_[2] + curr_nSq->v_[3] - curr_nSq->v_[4] - curr_nSq->v_[5];
     
@@ -475,7 +481,9 @@ void O6_Model::printParams()
   if( D_==3 )
   {
     std::cout << "      Vz = " << Vz_      << "\n"
-              << "     Vz' = " << VzPrime_ << "\n";
+              << "     Vz' = " << VzPrime_ << "\n"
+              << "      Lz = " << Lz_      << "\n"
+              << "     Nxy = " << Nxy_     << "\n";
   }
   std::cout << std::endl;
 }
@@ -499,17 +507,20 @@ void O6_Model::setT(double newT)
 /********************************** sweep(MTRand* randomGen) *********************************/
 void O6_Model::sweep(MTRand* randomGen)
 { 
-  uint N1 = N_/2;     //number of local updates before Wolff step
-  uint N2 = N_ - N1;  //number of local updates after Wolff step
+  uint N1 = Nxy_/2;     //number of local updates before each Wolff step
+  uint N2 = Nxy_ - N1;  //number of local updates after each Wolff step
   
-  for( uint i=0; i<N1; i++ )
-  { localUpdate(randomGen); }
+  for( uint i=0; i<Lz_; i++ )
+  {
+    for( uint j=0; j<N1; j++ )
+    { localUpdate(randomGen); }
   
-  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
-  { wolffUpdate(randomGen); }
+    if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+    { wolffUpdate(randomGen); }
   
-  for( uint i=0; i<N2; i++ )
-  { localUpdate(randomGen); }
+    for( uint j=0; j<N2; j++ )
+    { localUpdate(randomGen); }
+  } //loop over i
 }
 
 /******************************** uintPower(int base, int exp) *******************************/

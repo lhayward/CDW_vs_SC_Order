@@ -35,6 +35,8 @@ class O6_Model : public Model
     //parameters of the lattice:
     uint    D_;       //dimension
     uint    N_;       //number of spins living on the hyperrectangle
+    uint    Nxy_;     //number of spins in each layer along the xy-plane
+    uint    Lz_;      //system length along the z direction (equals 1 when D=2)
     uint*   L_;       //lattice's linear length in each dimension
     
     Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
