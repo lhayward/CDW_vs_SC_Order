@@ -100,6 +100,26 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
   { v_[i] = v_[i]/S; }
 }
 
+/********************************* Vector_NDim (constructor) *********************************/
+Vector_NDim::Vector_NDim(uint N, MTRand* randomGen, uint start, uint end)
+{
+  N_ = N;
+  v_ = new double[N];
+  uint n;
+  
+  for( uint i=0; i<N_; i++ )
+  { v_[i] = 0; }
+  
+  n=1;
+  if( end>start )
+  { n = end-start+1; }
+  
+  Vector_NDim nonzeroParts(n, randomGen);
+  
+  for( uint i=0; i<n; i++ )
+  { v_[i+start] = nonzeroParts.v_[i]; }
+}
+
 /********************************* ~Vector_NDim (destructor) *********************************/
 Vector_NDim::~Vector_NDim()
 {

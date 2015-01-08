@@ -29,6 +29,8 @@ Model::Model(std::ifstream* fin, std::string outFileName)
   fout.open(outFileName.c_str());
   fout.precision(15);
   
+  warmupDone = false;
+  
   //initialize the temperature (should be changed by user to desired temperature before
   //starting the simulation):
   T_ = 1.0;
@@ -42,15 +44,22 @@ Model::Model(std::ifstream* fin, std::string outFileName)
 Model::~Model()
 { fout.close(); }
 
+/************************************ changeT(double newT) ***********************************/
+void Model::changeT(double newT)
+{ 
+  T_ = newT;
+  warmupDone = false;
+}
+
+/************************************** markWarmupDone() *************************************/
+void Model::markWarmupDone()
+{ warmupDone = true; }
+
 /*************************************** printParams() ***************************************/
 void Model::printParams()
 {
   std::cout << "       J = " << J_ << "\n";
 }
-
-/************************************* setT(double newT) *************************************/
-void Model::setT(double newT)
-{ T_ = newT; }
 
 /************************************* zeroMeasurements() ************************************/
 void Model::zeroMeasurements()

@@ -13,6 +13,7 @@
 //#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
 #include "FileReading.h"
@@ -36,20 +37,23 @@ Model* readModel(std::string modelName, std::string inFileName, std::string star
 **********************************************************************************************/
 int main(int argc, char** argv) 
 {
-  MTRand         randomGen;
-  SimParameters* params;
-  Lattice*       lattice;
-  Model*         model;
-  double         T; //current temperature
-  time_t         sec1, sec2;  //for timing
+  MTRand            randomGen;
+  SimParameters*    params;
+  Lattice*          lattice;
+  Model*            model;
+  uint              numT;  //number of temperatures
+  double            T; //current temperature
+  std::stringstream ss;
+  time_t            sec1, sec2;  //for timing
   
   //variables related to input/output data from/to files:
-  std::string fileSuffix      = getFileSuffix( argc, argv );
-  std::string paramFileName   = "params" + fileSuffix + ".txt";
-  std::string simParamStr     = "SIMULATION PARAMETERS";
-  std::string latticeParamStr = "LATTICE PARAMETERS";
-  std::string modelParamStr   = "MODEL PARAMETERS";
-  std::string outFileName     = "bins" + fileSuffix + ".txt";
+  std::string fileSuffix        = getFileSuffix( argc, argv );
+  std::string paramFileName     = "params" + fileSuffix + ".txt";
+  std::string simParamStr       = "SIMULATION PARAMETERS";
+  std::string latticeParamStr   = "LATTICE PARAMETERS";
+  std::string modelParamStr     = "MODEL PARAMETERS";
+  std::string outFileName       = "bins" + fileSuffix + ".txt";
+  std::string outFileName_clust;
   
   std::cout.precision(8);
   std::cout << "\nParameter File: " << paramFileName << "\n" << std::endl;
@@ -67,17 +71,19 @@ int main(int argc, char** argv)
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
   sec1 = time (NULL);
   //loop over the different temperatures:
-  for( uint TIndex=0; TIndex<(params->TList_->size()); TIndex++)
+  numT = params->TList_->size();
+  for( uint TIndex=0; TIndex<numT; TIndex++)
   {
     T = (*(params->TList_))[TIndex];
     std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
               << std::endl;
-    model->setT(T);
+    model->changeT(T);
     model->randomizeLattice( params->randomGen_ );
     
     //equilibrate:
     for( uint i=0; i<params->numWarmUpSweeps_; i++ )
-    { model->sweep( params->randomGen_ ); }
+    { model->sweep( params->randomGen_, false ); }
+    model->markWarmupDone();
     
     //loop over Monte Carlo bins:
     for( uint i=0; i<params->numBins_; i++ )
@@ -88,14 +94,25 @@ int main(int argc, char** argv)
       {
         //perform the sweeps for one measurement:
         for( uint k=0; k<params->sweepsPerMeas_; k++ )
-        { model->sweep( params->randomGen_ ); }
+        { model->sweep( params->randomGen_, false ); }
         model->makeMeasurement();
       } //loop over measurements
-      model->writeBin((i+1), params->measPerBin_);
+      model->writeBin((i+1), params->measPerBin_, params->sweepsPerMeas_);
       
       if( (i+1)%100==0 )
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
     } //loop over bins
+    
+    //possibly write the cluster sizes to file (if it is turned on):
+    outFileName_clust = "clustSizes" + fileSuffix + ".txt";
+    if( numT > 1 )
+    { 
+      ss.str("");
+      ss << "clustSizes" << fileSuffix << "_" << TIndex << ".txt"; 
+      outFileName_clust = ss.str(); 
+    }
+    model->writeClustHistoData(outFileName_clust);
+    
     std::cout << std::endl;
   } //temperature loop 
   
@@ -129,7 +146,7 @@ Lattice* readLattice(std::string latticeName, std::string fileName, std::string 
 }
 
 /**************** readModel(std::string modelName, std::string inFileName, ... ****************
-*****************           std::string startStr, std::string outFileName,     ****************
+*****************           std::string startStr, std::string outFileName, ... ****************
 *****************           Lattice* lattice, MTRand* randomGen)               ***************/
 Model* readModel(std::string modelName, std::string inFileName, std::string startStr, 
                  std::string outFileName, Lattice* lattice, MTRand* randomGen )

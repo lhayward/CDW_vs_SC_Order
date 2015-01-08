@@ -93,6 +93,25 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
             ss << "nSq[" << i << "]";
             measures.insert(ss.str()); 
           }
+          measures.insert("AccRate_local");
+          measures.insert("AccRate_clust");
+          numAccept_local_ = 0;
+          numAccept_clust_ = 0;
+          
+          //if we will track cluster sizes, initialize the corresponding arrays:
+          if( writeClusts_ )
+          {
+            clustSizes_          = new uint[N_];
+            clustSizes_accepted_ = new uint[N_];
+            clustSizes_rejected_ = new uint[N_];
+            
+            for( uint i=0; i<N_; i++ )
+            { 
+              clustSizes_[i]          = 0;
+              clustSizes_accepted_[i] = 0;
+              clustSizes_rejected_[i] = 0; 
+            }
+          }
           
         } //if for dimension
         else
@@ -133,7 +152,26 @@ O6_Model::~O6_Model()
   if( inCluster_ != NULL )
   { delete[] inCluster_; }
   inCluster_ = NULL;
+  
+  if( writeClusts_ )
+  {
+    if( clustSizes_ != NULL )
+    { delete[] clustSizes_; }
+    clustSizes_ = NULL;
+    
+    if( clustSizes_accepted_ != NULL )
+    { delete[] clustSizes_accepted_; }
+    clustSizes_accepted_ = NULL;
+    
+    if( clustSizes_rejected_ != NULL )
+    { delete[] clustSizes_rejected_; }
+    clustSizes_rejected_ = NULL;
+  }
 } //destructor
+
+/************************************ changeT(double newT) ***********************************/
+void O6_Model::changeT(double newT)
+{ Model::changeT(newT); }
 
 /*************************************** clearCluster ***************************************/ 
 void O6_Model::clearCluster(std::vector<uint>* cluster)
@@ -402,6 +440,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
     spin_old = NULL;
     
     spins_->setSpin( latticeSite, spin_new );
+    numAccept_local_++;
   }
   //otherwise, the move is rejected:
   else
@@ -467,6 +506,24 @@ void O6_Model::makeMeasurement()
   nSq = NULL;
 }
 
+/************************************** markWarmupDone() *************************************/
+void O6_Model::markWarmupDone()
+{ 
+  Model::markWarmupDone();
+  
+  //if we will track cluster sizes, set all stored sizes to zero (since warm-up has just 
+  //finished and the user can start tracking measurements):
+  if( writeClusts_ )
+  {
+    for( uint i=0; i<N_; i++ )
+    { 
+      clustSizes_[i] = 0;
+      clustSizes_accepted_[i] = 0;
+      clustSizes_rejected_[i] = 0; 
+    }
+  }
+}
+
 /*************************************** printParams() ***************************************/
 void O6_Model::printParams()
 {
@@ -498,17 +555,12 @@ void O6_Model::randomizeLattice(MTRand* randomGen)
   spins_->randomize(randomGen);
 }
 
-/************************************* setT(double newT) *************************************/
-void O6_Model::setT(double newT)
-{ 
-  Model::setT(newT); 
-}
-
 /********************************** sweep(MTRand* randomGen) *********************************/
-void O6_Model::sweep(MTRand* randomGen)
+void O6_Model::sweep(MTRand* randomGen, bool pr)
 { 
-  uint N1 = Nxy_/2;     //number of local updates before each Wolff step
-  uint N2 = Nxy_ - N1;  //number of local updates after each Wolff step
+  uint N1 = Nxy_/3;          //number of local updates before first Wolff step
+  uint N2 = N1;              //number of local updates between first and second Wolff step
+  uint N3 = Nxy_ - N1 - N2;  //number of local updates between second and third Wolff step
   
   for( uint i=0; i<Lz_; i++ )
   {
@@ -516,10 +568,22 @@ void O6_Model::sweep(MTRand* randomGen)
     { localUpdate(randomGen); }
   
     if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
-    { wolffUpdate(randomGen); }
+    { wolffUpdate(randomGen, 0, 5, pr); }
   
     for( uint j=0; j<N2; j++ )
     { localUpdate(randomGen); }
+    
+    if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+    { wolffUpdate(randomGen, 0, 5, pr); }
+    
+    for( uint j=0; j<N3; j++ )
+    { localUpdate(randomGen); }
+    
+    if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+    { wolffUpdate(randomGen, 0, 5, pr); }
+    
+    if(pr)
+    {std::cout << "---------" << std::endl; }
   } //loop over i
 }
 
@@ -534,7 +598,7 @@ uint O6_Model::uintPower(uint base, uint exp)
 } //uintPower method
 
 /******************************* wolffUpdate(MTRand* randomGen) ******************************/
-void O6_Model::wolffUpdate(MTRand* randomGen)
+void O6_Model::wolffUpdate(MTRand* randomGen, uint start, uint end, bool pr)
 {
   if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
   {
@@ -542,6 +606,7 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
   
     uint               latticeSite;
     uint               neighSite;
+    uint               clustSize;
     double             PAdd;
     double             exponent;  //exponent for PAdd
     double             onsiteEnergy_initial;
@@ -549,7 +614,7 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
     double             onsiteEnergy_diff;
     double             PAcceptCluster;
     double             rDotRef;
-    Vector_NDim*       r = new Vector_NDim(VECTOR_SPIN_DIM,randomGen);
+    Vector_NDim*       r = new Vector_NDim(VECTOR_SPIN_DIM,randomGen, start, end);
     Vector_NDim*       reflectedSpin = NULL;
     std::vector<uint>  buffer;  //indices of spins to try to add to cluster (will loop until 
                                 //buffer is empty)
@@ -615,16 +680,52 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
     onsiteEnergy_final = getClusterOnSiteEnergy(&cluster);
     onsiteEnergy_diff = onsiteEnergy_final - onsiteEnergy_initial;
     
+    if( pr || writeClusts_ )
+    { 
+      clustSize = cluster.size(); 
+      if( writeClusts_ )
+      { clustSizes_[clustSize-1]++; }
+    }
+    
     //If the onsite energy diff. is negative, accept the cluster move. If the onsite energy 
     //diff. is positive, accept the cluster move with probability exp^(-beta*onsiteEnery_diff).
     //Note: cluster is already flipped currently, so this is a check to see if we need to flip 
     //      it back:
+    if(pr)
+    { r->print(); }
     if( onsiteEnergy_diff > 0 )
     {
       PAcceptCluster = exp(-1.0*onsiteEnergy_diff/T_);
+      if(pr)
+      {
+        std::cout << "  PAccept = " << PAcceptCluster << std::endl;
+        std::cout << "  size = " << clustSize << std::endl << std::endl;
+      }
       //check if we need to flip the cluster back to its original orientation:
       if( randomGen->randDblExc() > PAcceptCluster )
-      { flipCluster(&cluster, r); }
+      { 
+        flipCluster(&cluster, r);
+        if( writeClusts_ )
+        { clustSizes_rejected_[clustSize-1]++; }
+      }
+      else
+      { 
+        numAccept_clust_++;
+        if( writeClusts_ )
+        { clustSizes_accepted_[clustSize-1]++; }
+      }
+    }
+    else 
+    {
+      numAccept_clust_++;
+      if( writeClusts_ )
+      { clustSizes_accepted_[clustSize-1]++; }
+      
+      if(pr)
+      {
+        std::cout << "  onsite <= 0" << std::endl;
+        std::cout << "  size = " << clustSize << std::endl << std::endl;
+      }
     }
     
     clearCluster(&cluster);
@@ -636,9 +737,14 @@ void O6_Model::wolffUpdate(MTRand* randomGen)
   } //if for lambda_=1 and VzPrime_=Vz_
 } //wolffUpdate()
 
-/***************************** writeBin(int binNum, int numMeas) *****************************/
-void O6_Model::writeBin(int binNum, int numMeas)
+/******************** writeBin(int binNum, int numMeas, int sweepsPerMeas) *******************/
+void O6_Model::writeBin(int binNum, int numMeas, int sweepsPerMeas)
 {
+  //Note: the following two measurements will be divided by numMeas in the call to
+  //writeAverages() such that acceptance rates are written to file
+  measures.accumulate( "AccRate_local", numAccept_local_/(1.0*N_*sweepsPerMeas) );
+  measures.accumulate( "AccRate_clust", numAccept_clust_/(3.0*Lz_*sweepsPerMeas) );
+  
   //if this is the first bin being written to file, then also write a line of text explaining
   //each column:
   if( binNum == 1)
@@ -650,4 +756,32 @@ void O6_Model::writeBin(int binNum, int numMeas)
   fout << L_[0] << '\t' << T_ << '\t' << binNum;
   measures.writeAverages(&fout, numMeas);
   fout << std::endl;
+}
+
+/************************* writeClustHistoData(std::string fileName) *************************/
+void O6_Model::writeClustHistoData(std::string fileName)
+{
+  std::ofstream fout_clust;
+  
+  if( writeClusts_ )
+  {
+    fout_clust.open(fileName.c_str());
+    fout_clust.precision(15);
+  
+    fout_clust << "#T \t clustSize \t num_generated \t num_accepted \t num_rejected" << std::endl;
+    for( uint i=0; i<N_; i++ )
+    { 
+      fout_clust << T_ << '\t' << (i+1) << '\t' << clustSizes_[i] << '\t' << clustSizes_accepted_[i] 
+                 << '\t' << clustSizes_rejected_[i] << std::endl;
+    }
+    fout_clust.close();
+  }
+}
+
+/************************************* zeroMeasurements() ************************************/
+void O6_Model::zeroMeasurements()
+{ 
+  Model::zeroMeasurements();
+  numAccept_local_ = 0;
+  numAccept_clust_ = 0;
 }

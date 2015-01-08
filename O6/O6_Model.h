@@ -45,6 +45,16 @@ class O6_Model : public Model
     bool*           inCluster_;  //boolean array for wolffUpdate indicating whether or not each
                                  //spin is in the cluster (redundant information to cluster 
                                  //vec, but stored for efficiency purposes)
+                                 
+    //acceptance rates for the two kinds of updates:
+    int numAccept_local_;
+    int numAccept_clust_;
+    
+    //variables related to storing the cluster sizes to generate a histogram:
+    static const bool writeClusts_ = false;  //should we write data for the cluster histograms?
+    uint*             clustSizes_;
+    uint*             clustSizes_accepted_;
+    uint*             clustSizes_rejected_;
     
     void         clearCluster          (std::vector<uint>* cluster);
     void         flipCluster           (std::vector<uint>* cluster, Vector_NDim* r);
@@ -55,20 +65,24 @@ class O6_Model : public Model
     Vector_NDim* getMagnetization      ();
     uint         uintPower             (uint base, uint exp);
     void         updateObservables     ();
-    void         wolffUpdate           (MTRand* randomGen);
+    void         wolffUpdate           (MTRand* randomGen, uint start, uint end, bool pr);
     
   public:
     O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);
     virtual ~O6_Model();
     
+    
+    virtual void changeT            (double newT);
     virtual void localUpdate        (MTRand* randomGen);
     virtual void makeMeasurement    ();
+    virtual void markWarmupDone     ();
     virtual void printParams        ();
     virtual void printSpins         ();
     virtual void randomizeLattice   (MTRand* randomGen);
-    virtual void setT               (double newT);
-    virtual void sweep              (MTRand* randomGen);
-    virtual void writeBin           (int binNum, int numMeas);
+    virtual void sweep              (MTRand* randomGen, bool pr);
+    virtual void writeBin           (int binNum, int numMeas, int sweepsPerMeas);
+    virtual void writeClustHistoData(std::string fileName);
+    virtual void zeroMeasurements   ();
 };  
 
 #endif  // O6_MODEL
