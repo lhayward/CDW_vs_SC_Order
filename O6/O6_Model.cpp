@@ -36,6 +36,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
     g_      = FileReading::readDouble(fin, EQUALS_CHAR);
     gPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
     w_      = FileReading::readDouble(fin, EQUALS_CHAR);
+    r_      = FileReading::readDouble(fin, EQUALS_CHAR);
   
     if( lattice != NULL )
     {
@@ -533,7 +534,8 @@ void O6_Model::printParams()
   std::cout << "  lambda = " << lambda_ << "\n"
             << "       g = " << g_      << "\n"
             << "      g' = " << gPrime_ << "\n"
-            << "       w = " << w_      << "\n";
+            << "       w = " << w_      << "\n"
+            << "       r = " << r_      << "\n";
   //if D_==3, then also print the interlayer coupling:
   if( D_==3 )
   {
