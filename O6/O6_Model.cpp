@@ -213,6 +213,7 @@ double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
   double       energyg=0;
   double       energygPrime=0;
   double       energyw=0;
+  double       energyr=0;
   Vector_NDim* currSpin;
   
   for( uint i=0; i<clustSize; i++ )
@@ -226,13 +227,15 @@ double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
     energygPrime += pow(sumCDWSqs,2.0);
     energyw      += pow(currSpin->getSquareForRange(2,3),2.0) 
                     + pow(currSpin->getSquareForRange(4,5),2.0);
+    energyr      += pow( (sumCDWSqs - currSpin->getSquareForRange(0,1)), 2.0 );
   } //for loop
   
   energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
   energygPrime *= gPrime_/2.0;
   energyw *= w_/2.0;
+  energyr *= r_/2.0;
   
-  return J_*(energyg + energygPrime + energyw);
+  return J_*(energyg + energygPrime + energyw + energyr);
 } //getClusterOnSiteEnergy
 
 /**************************************** getEnergy() ****************************************/
@@ -245,6 +248,7 @@ double O6_Model::getEnergy()
   double       energyg       = 0;
   double       energygPrime  = 0;
   double       energyw       = 0;
+  double       energyr       = 0;
   double       energyVz      = 0;
   double       energyVzPrime = 0;
   Vector_NDim* currSpin;
@@ -269,17 +273,19 @@ double O6_Model::getEnergy()
   
   for( uint i=0; i<N_; i++ )
   { 
-    sumCDWSqs = spins_->getSpin(i)->getSquareForRange(2,VECTOR_SPIN_DIM-1); 
-    energyg += sumCDWSqs;
+    currSpin  = spins_->getSpin(i);
+    sumCDWSqs = currSpin->getSquareForRange(2,VECTOR_SPIN_DIM-1); 
+    
+    energyg      += sumCDWSqs;
     energygPrime += pow(sumCDWSqs,2.0);
+    energyw      += pow( currSpin->getSquareForRange(2,3), 2.0 ) 
+                    + pow( currSpin->getSquareForRange(4,5), 2.0 );
+    energyr      += pow( (sumCDWSqs - currSpin->getSquareForRange(0,1)), 2.0 );
   }
   energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
   energygPrime *= gPrime_/2.0;
-  
-  for( uint i=0; i<N_; i++ )
-  { energyw += pow( spins_->getSpin(i)->getSquareForRange(2,3), 2.0 ) 
-               + pow( spins_->getSpin(i)->getSquareForRange(4,5), 2.0 ); }
   energyw *= w_/2.0;
+  energyr *= r_/2.0;
   
   //in three dimensions, then also add the energy due to interlayer coupling:
   if( D_==3 )
@@ -296,7 +302,7 @@ double O6_Model::getEnergy()
     energyVzPrime *= -1*VzPrime_;
   }//if for D_==3
   
-  energy = J_*(energy1 + energyLambda + energyg + energygPrime + energyw 
+  energy = J_*(energy1 + energyLambda + energyg + energygPrime + energyw + energyr
                + energyVz + energyVzPrime);
   return energy;
 } //getEnergy()
@@ -422,7 +428,9 @@ void O6_Model::localUpdate(MTRand* randomGen)
                + w_/2.0*( pow(spin_new->getSquareForRange(2,3),2.0) 
                          + pow(spin_new->getSquareForRange(4,5),2.0) 
                          - pow(spin_old->getSquareForRange(2,3),2.0) 
-                         - pow(spin_old->getSquareForRange(4,5),2.0) ) );
+                         - pow(spin_old->getSquareForRange(4,5),2.0) ) 
+               + r_/2.0*( pow( (newCDWSumSqs - spin_new->getSquareForRange(0,1)), 2.0 ) 
+                          - pow( (oldCDWSumSqs - spin_old->getSquareForRange(0,1)), 2.0 )) );
   //if D_=3 then also include the contribution to deltaE from interlayer coupling:
   if( D_==3 )
   {
@@ -570,19 +578,19 @@ void O6_Model::sweep(MTRand* randomGen, bool pr)
     { localUpdate(randomGen); }
   
     if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
-    { wolffUpdate(randomGen, 0, 5, pr); }
+    { wolffUpdate(randomGen, 0, 1, pr); }
   
     for( uint j=0; j<N2; j++ )
     { localUpdate(randomGen); }
     
     if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
-    { wolffUpdate(randomGen, 0, 5, pr); }
+    { wolffUpdate(randomGen, 2, 3, pr); }
     
     for( uint j=0; j<N3; j++ )
     { localUpdate(randomGen); }
     
     if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
-    { wolffUpdate(randomGen, 0, 5, pr); }
+    { wolffUpdate(randomGen, 4, 5, pr); }
     
     if(pr)
     {std::cout << "---------" << std::endl; }
