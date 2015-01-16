@@ -45,6 +45,8 @@ class O6_Model : public Model
     Hyperrectangle* hrect_; //the hyperrectangular lattice on which the d.o.f. live
     VectorSpins*    spins_; //the degrees of freedom (d.o.f.) for the model
     
+    double** h_; //random field (for the disorder term in the Hamiltonian)
+    
     bool*           inCluster_;  //boolean array for wolffUpdate indicating whether or not each
                                  //spin is in the cluster (redundant information to cluster 
                                  //vec, but stored for efficiency purposes)

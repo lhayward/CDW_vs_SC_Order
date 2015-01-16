@@ -72,6 +72,19 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           spins_ = new VectorSpins(N_, VECTOR_SPIN_DIM);
           randomizeLattice(randomGen);
           
+          //create the array of random field variables (for disorder):
+          h_ = new double*[N_];
+          for( uint i=0; i<N_; i++ )
+          { 
+            h_[i] = new double[4]; 
+            for( uint j=0; j<4; j++ )
+            { 
+              h_[i][j] = 0;
+              if( sigma_>0 )
+              { h_[i][j] = randomGen->randNorm( 0, pow(2,0.5)*sigma_ ); }
+            }
+          }
+          
           inCluster_ = new bool[N_];
           for( uint i=0; i<N_; i++ )
           { inCluster_[i] = 0; }
