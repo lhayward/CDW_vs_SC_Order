@@ -37,6 +37,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
     gPrime_ = FileReading::readDouble(fin, EQUALS_CHAR);
     w_      = FileReading::readDouble(fin, EQUALS_CHAR);
     r_      = FileReading::readDouble(fin, EQUALS_CHAR);
+    sigma_  = FileReading::readDouble(fin, EQUALS_CHAR);
   
     if( lattice != NULL )
     {
@@ -543,7 +544,8 @@ void O6_Model::printParams()
             << "       g = " << g_      << "\n"
             << "      g' = " << gPrime_ << "\n"
             << "       w = " << w_      << "\n"
-            << "       r = " << r_      << "\n";
+            << "       r = " << r_      << "\n"
+            << "   sigma = " << sigma_      << "\n";
   //if D_==3, then also print the interlayer coupling:
   if( D_==3 )
   {
@@ -568,7 +570,19 @@ void O6_Model::randomizeLattice(MTRand* randomGen)
 /********************************** sweep(MTRand* randomGen) *********************************/
 void O6_Model::sweep(MTRand* randomGen, bool pr)
 { 
-  uint N1 = Nxy_/3;          //number of local updates before first Wolff step
+  uint N1 = N_/2;     //number of local updates before Wolff step
+  uint N2 = N_ - N1;  //number of local updates after Wolff step
+  
+  for( uint i=0; i<N1; i++ )
+  { localUpdate(randomGen); }
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen, 0, 5, pr); }
+  
+  for( uint i=0; i<N2; i++ )
+  { localUpdate(randomGen); }
+  
+  /*uint N1 = Nxy_/3;          //number of local updates before first Wolff step
   uint N2 = N1;              //number of local updates between first and second Wolff step
   uint N3 = Nxy_ - N1 - N2;  //number of local updates between second and third Wolff step
   
@@ -594,7 +608,7 @@ void O6_Model::sweep(MTRand* randomGen, bool pr)
     
     if(pr)
     {std::cout << "---------" << std::endl; }
-  } //loop over i
+  } //loop over i */
 }
 
 /******************************** uintPower(int base, int exp) *******************************/

@@ -32,6 +32,8 @@ class O6_Model : public Model
     double r_;        //coefficient of the additional quartic term
     double  Vz_;      //interlayer coupling for CDW order (only applicable when D_=3)
     double  VzPrime_; //interlayer coupling for SC order (only applicable when D_=3)
+    double  sigma_;   //related to the standard deviation of the disorder term 
+                      //(std. dev. = sqrt(2)*sigma)
                       
     //parameters of the lattice:
     uint    D_;       //dimension
