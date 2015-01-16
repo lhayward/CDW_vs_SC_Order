@@ -263,6 +263,7 @@ double O6_Model::getEnergy()
   double       energygPrime  = 0;
   double       energyw       = 0;
   double       energyr       = 0;
+  double       energyh       = 0;
   double       energyVz      = 0;
   double       energyVzPrime = 0;
   Vector_NDim* currSpin;
@@ -295,6 +296,10 @@ double O6_Model::getEnergy()
     energyw      += pow( currSpin->getSquareForRange(2,3), 2.0 ) 
                     + pow( currSpin->getSquareForRange(4,5), 2.0 );
     energyr      += pow( (sumCDWSqs - currSpin->getSquareForRange(0,1)), 2.0 );
+    
+    //disorder term:
+    for( uint j=0; j<4; j++ )
+    { energyh += currSpin->v_[j+2]*h_[i][j]; }
   }
   energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
   energygPrime *= gPrime_/2.0;
@@ -316,7 +321,7 @@ double O6_Model::getEnergy()
     energyVzPrime *= -1*VzPrime_;
   }//if for D_==3
   
-  energy = J_*(energy1 + energyLambda + energyg + energygPrime + energyw + energyr
+  energy = J_*(energy1 + energyLambda + energyg + energygPrime + energyw + energyr + energyh
                + energyVz + energyVzPrime);
   return energy;
 } //getEnergy()
