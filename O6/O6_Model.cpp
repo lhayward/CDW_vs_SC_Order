@@ -228,6 +228,7 @@ double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
   double       energygPrime=0;
   double       energyw=0;
   double       energyr=0;
+  double       energyh=0;
   Vector_NDim* currSpin;
   
   for( uint i=0; i<clustSize; i++ )
@@ -242,14 +243,19 @@ double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
     energyw      += pow(currSpin->getSquareForRange(2,3),2.0) 
                     + pow(currSpin->getSquareForRange(4,5),2.0);
     energyr      += pow( (sumCDWSqs - currSpin->getSquareForRange(0,1)), 2.0 );
+    
+    //disorder term (involves CDW components):
+    for( uint j=0; j<4; j++ )
+    { energyh += h_[i][j]*currSpin->v_[j+2]; }
   } //for loop
   
   energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
   energygPrime *= gPrime_/2.0;
   energyw *= w_/2.0;
   energyr *= r_/2.0;
+  energyh *= 1/2.0;
   
-  return J_*(energyg + energygPrime + energyw + energyr);
+  return J_*(energyg + energygPrime + energyw + energyr + energyh);
 } //getClusterOnSiteEnergy
 
 /**************************************** getEnergy() ****************************************/
@@ -305,6 +311,7 @@ double O6_Model::getEnergy()
   energygPrime *= gPrime_/2.0;
   energyw *= w_/2.0;
   energyr *= r_/2.0;
+  energyh *= 1/2.0;
   
   //in three dimensions, then also add the energy due to interlayer coupling:
   if( D_==3 )
@@ -453,7 +460,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
                           
   //add in the contribution to deltaE from the CDW disorder:
   for( uint i=0; i<4; i++ )
-  { deltaE += h_[latticeSite][i]*(spin_new->v_[i+2] - spin_old->v_[i+2]); }
+  { deltaE += h_[latticeSite][i]/2.0*(spin_new->v_[i+2] - spin_old->v_[i+2]); }
   
   //if D_=3 then also include the contribution to deltaE from interlayer coupling:
   if( D_==3 )
