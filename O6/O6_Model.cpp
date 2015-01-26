@@ -246,7 +246,7 @@ double O6_Model::getClusterOnSiteEnergy(std::vector<uint>* cluster)
     
     //disorder term (involves CDW components):
     for( uint j=0; j<4; j++ )
-    { energyh += h_[i][j]*currSpin->v_[j+2]; }
+    { energyh += h_[latticeSite][j]*currSpin->v_[j+2]; }
   } //for loop
   
   energyg *= (g_ + 4.0*(lambda_-1.0))/2.0;
