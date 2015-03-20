@@ -30,7 +30,7 @@ class SimParameters
                                         //(eg. "hypercube", "kagome", etc.)
     std::string          modelName_;  //name of the Hamiltonian 
                                       //(eg. "ising", "toriccode", etc.)
-    MTRand*              randomGen_;  //random number generator
+    MTRand              randomGen_;  //random number generator
     
   //public:
     SimParameters(std::string fileName, std::string startStr);

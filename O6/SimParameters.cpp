@@ -43,7 +43,7 @@ SimParameters::SimParameters(std::string fileName, std::string startStr)
     latticeType_     = FileReading::readString   (&fin, EQUALS_CHAR);
     modelName_       = FileReading::readString   (&fin, EQUALS_CHAR);
     
-    randomGen_       = new MTRand(seed_);
+    randomGen_.seed(seed_);
   }
   else
   { 

@@ -22,7 +22,7 @@ typedef O6_Model::uint uint;
 ******************          Lattice* lattice, MTRand* randomGen)             ******************
 ******************                       (constructor)                       *****************/
 O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice,
-                   MTRand* randomGen)
+                   MTRand &randomGen)
   : Model(fin, outFileName)
 {
   const char EQUALS_CHAR = '=';
@@ -81,7 +81,7 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
             { 
               h_[i][j] = 0;
               if( sigma_>0 )
-              { h_[i][j] = randomGen->randNorm( 0, pow(2,0.5)*sigma_ ); }
+              { h_[i][j] = randomGen.randNorm( 0, pow(2,0.5)*sigma_ ); }
             }
           }
           
@@ -92,6 +92,9 @@ O6_Model::O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice
           //Add measurement names to Measure object:
           measures.insert("HelicityModulus_x");
           measures.insert("HelicityModulus_y");
+          measures.insert("SC_m");
+          measures.insert("SC_m^2");
+          measures.insert("SC_m^4");
           measures.insert("Ising_m");
           measures.insert("Ising_mAbs");
           measures.insert("Ising_mSq");
@@ -403,7 +406,7 @@ Vector_NDim* O6_Model::getMagnetization()
 }
 
 /******************************* localUpdate(MTRand* randomGen) ******************************/
-void O6_Model::localUpdate(MTRand* randomGen)
+void O6_Model::localUpdate(MTRand &randomGen)
 {
   const uint   dir_x = 0;
   const uint   dir_y = 1;
@@ -422,7 +425,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
   spin_new = new Vector_NDim(VECTOR_SPIN_DIM, randomGen);
   
   //randomly select a spin on the lattice:
-  latticeSite = randomGen->randInt(N_-1);
+  latticeSite = randomGen.randInt(N_-1);
   spin_old    = spins_->getSpin(latticeSite);
   
   //loop to calculate the nearest neighbour sum for the xy-plane:
@@ -472,7 +475,7 @@ void O6_Model::localUpdate(MTRand* randomGen)
   }
   
   //if the move is accepted:
-  if( deltaE<=0 || randomGen->randDblExc() < exp(-deltaE/T_) )
+  if( deltaE<=0 || randomGen.randDblExc() < exp(-deltaE/T_) )
   { 
     //delete the vector storing the old state of the spin:
     if(spin_old!=NULL)
@@ -507,6 +510,7 @@ void O6_Model::makeMeasurement()
   double            energyPerSpin = getEnergy()/(1.0*N_);
   double            helicity_x    = getHelicityModulus(0);
   double            helicity_y    = getHelicityModulus(1);
+  double            SC_m2;
   double            isingOrder    = getIsingOrder();
   std::stringstream ss;
   Vector_NDim*      n             = getMagnetization();
@@ -515,10 +519,15 @@ void O6_Model::makeMeasurement()
   n->multiply(1.0/N_);     
   nSq->multiply(1.0/(N_*N_));
   
+  SC_m2 = (nSq->v_[0] + nSq->v_[1]);
+  
   measures.accumulate( "E",                 energyPerSpin ) ;
   measures.accumulate( "ESq",               pow(energyPerSpin,2) );
   measures.accumulate( "HelicityModulus_x", helicity_x );
   measures.accumulate( "HelicityModulus_y", helicity_y );
+  measures.accumulate( "SC_m",              pow(SC_m2,0.5) );
+  measures.accumulate( "SC_m^2",            SC_m2 );
+  measures.accumulate( "SC_m^4",            pow(SC_m2,2) );
   measures.accumulate( "Ising_m",           isingOrder );
   measures.accumulate( "Ising_mAbs",        std::abs(isingOrder) );
   measures.accumulate( "Ising_mSq",         pow(isingOrder,2) );
@@ -592,15 +601,15 @@ void O6_Model::printSpins()
 { spins_->print(); }
 
 /**************************** randomizeLattice(MTRand* randomGen) ****************************/
-void O6_Model::randomizeLattice(MTRand* randomGen)
+void O6_Model::randomizeLattice(MTRand &randomGen)
 { 
   spins_->randomize(randomGen);
 }
 
 /********************************** sweep(MTRand* randomGen) *********************************/
-void O6_Model::sweep(MTRand* randomGen, bool pr)
+void O6_Model::sweep(MTRand &randomGen, bool pr)
 { 
-  uint N1 = N_/2;     //number of local updates before Wolff step
+  /*uint N1 = N_/2;     //number of local updates before Wolff step
   uint N2 = N_ - N1;  //number of local updates after Wolff step
   
   for( uint i=0; i<N1; i++ )
@@ -610,7 +619,7 @@ void O6_Model::sweep(MTRand* randomGen, bool pr)
   { wolffUpdate(randomGen, 0, 5, pr); }
   
   for( uint i=0; i<N2; i++ )
-  { localUpdate(randomGen); }
+  { localUpdate(randomGen); }*/
   
   /*uint N1 = Nxy_/3;          //number of local updates before first Wolff step
   uint N2 = N1;              //number of local updates between first and second Wolff step
@@ -639,6 +648,35 @@ void O6_Model::sweep(MTRand* randomGen, bool pr)
     if(pr)
     {std::cout << "---------" << std::endl; }
   } //loop over i */
+  
+  uint N1 = N_/4;            //number of local updates before first Wolff step
+  uint N2 = N1;              //number of local updates between first and second Wolff step
+  uint N3 = N1;              //number of local updates between first and second Wolff step
+  uint N4 = N_-N1-N2-N3;  //number of local updates between second and fourth Wolff step
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen, 0, 1, pr); } //Wolff for SC components
+  
+  for( uint i=0; i<N1; i++ )
+  { localUpdate(randomGen); }
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen, 2, 3, pr); } //Wolff for CDW_x
+  
+  for( uint i=0; i<N2; i++ )
+  { localUpdate(randomGen); }
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen, 0, 5, pr); } //Wolff for all components
+  
+  for( uint i=0; i<N3; i++ )
+  { localUpdate(randomGen); }
+  
+  if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
+  { wolffUpdate(randomGen, 4, 5, pr); } //Wolff for CDW_y
+  
+  for( uint i=0; i<N4; i++ )
+  { localUpdate(randomGen); }
 }
 
 /******************************** uintPower(int base, int exp) *******************************/
@@ -652,7 +690,7 @@ uint O6_Model::uintPower(uint base, uint exp)
 } //uintPower method
 
 /******************************* wolffUpdate(MTRand* randomGen) ******************************/
-void O6_Model::wolffUpdate(MTRand* randomGen, uint start, uint end, bool pr)
+void O6_Model::wolffUpdate(MTRand &randomGen, uint start, uint end, bool pr)
 {
   if( (lambda_==1) && (D_!=3 || VzPrime_==Vz_) )
   {
@@ -674,7 +712,10 @@ void O6_Model::wolffUpdate(MTRand* randomGen, uint start, uint end, bool pr)
                                 //buffer is empty)
     std::vector<uint>  cluster; //vector storing the indices of spins in the cluster
     
-    latticeSite = randomGen->randInt(N_-1);
+    buffer.reserve(N_);
+    cluster.reserve(N_);
+    
+    latticeSite = randomGen.randInt(N_-1);
     //flipSpin(latticeSite, r);  //don't flip yet for efficiency
     inCluster_[latticeSite] = 1;
     cluster.push_back(latticeSite);
@@ -711,7 +752,7 @@ void O6_Model::wolffUpdate(MTRand* randomGen, uint start, uint end, bool pr)
         if (exponent < 0 )
         { 
           PAdd = 1.0 - exp(exponent);
-          if( !( inCluster_[ neighSite ] ) && (randomGen->randDblExc() < PAdd) )
+          if( !( inCluster_[ neighSite ] ) && (randomGen.randDblExc() < PAdd) )
           { 
             //flipSpin(neighbours[site][i],r); 
             inCluster_[ neighSite ] = 1;
@@ -756,7 +797,7 @@ void O6_Model::wolffUpdate(MTRand* randomGen, uint start, uint end, bool pr)
         std::cout << "  size = " << clustSize << std::endl << std::endl;
       }
       //check if we need to flip the cluster back to its original orientation:
-      if( randomGen->randDblExc() > PAcceptCluster )
+      if( randomGen.randDblExc() > PAcceptCluster )
       { 
         flipCluster(&cluster, r);
         if( writeClusts_ )

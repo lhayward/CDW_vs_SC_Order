@@ -70,21 +70,21 @@ class O6_Model : public Model
     Vector_NDim* getMagnetization      ();
     uint         uintPower             (uint base, uint exp);
     void         updateObservables     ();
-    void         wolffUpdate           (MTRand* randomGen, uint start, uint end, bool pr);
+    void         wolffUpdate           (MTRand &randomGen, uint start, uint end, bool pr);
     
   public:
-    O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand* randomGen);
+    O6_Model(std::ifstream* fin, std::string outFileName, Lattice* lattice, MTRand &randomGen);
     virtual ~O6_Model();
     
     
     virtual void changeT            (double newT);
-    virtual void localUpdate        (MTRand* randomGen);
+    virtual void localUpdate        (MTRand &randomGen);
     virtual void makeMeasurement    ();
     virtual void markWarmupDone     ();
     virtual void printParams        ();
     virtual void printSpins         ();
-    virtual void randomizeLattice   (MTRand* randomGen);
-    virtual void sweep              (MTRand* randomGen, bool pr);
+    virtual void randomizeLattice   (MTRand &randomGen);
+    virtual void sweep              (MTRand &randomGen, bool pr);
     virtual void writeBin           (int binNum, int numMeas, int sweepsPerMeas);
     virtual void writeClustHistoData(std::string fileName);
     virtual void zeroMeasurements   ();

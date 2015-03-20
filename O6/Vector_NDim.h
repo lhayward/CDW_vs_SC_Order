@@ -23,8 +23,8 @@ class Vector_NDim
     Vector_NDim(uint N, Vector_NDim* oldVec); //copy constructor
     Vector_NDim(uint N, double val);
     Vector_NDim(uint N, int val);
-    Vector_NDim(uint N, MTRand* randomGen);
-    Vector_NDim(uint N, MTRand* randomGen, uint start, uint end);
+    Vector_NDim(uint N, MTRand &randomGen);
+    Vector_NDim(uint N, MTRand &randomGen, uint start, uint end);
     virtual ~Vector_NDim();
   
     void         add(Vector_NDim* vec2);

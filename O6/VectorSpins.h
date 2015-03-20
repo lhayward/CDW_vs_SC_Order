@@ -28,7 +28,7 @@ class VectorSpins
     
     Vector_NDim* getSpin(uint i);
     void         print();
-    void         randomize(MTRand* randomGen);
+    void         randomize(MTRand &randomGen);
     void         setSpin(uint i, Vector_NDim* newSpin);
 };
 

@@ -57,7 +57,7 @@ Vector_NDim::Vector_NDim(uint N, int val)
 *
 * Note: It is also possible to use the method proposed by Marsaglia in 1972 for the N=4 case.
 **********************************************************************************************/
-Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
+Vector_NDim::Vector_NDim(uint N, MTRand &randomGen)
 {
   N_ = N;
   v_ = new double[N];
@@ -68,7 +68,7 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
   {
     for( uint i=0; i<N_; i++ )
     {
-      v_[i] = -1.0 + 2*(randomGen->randDblExc());
+      v_[i] = -1.0 + 2*(randomGen.randDblExc());
       S += pow(v_[i],2);
     } //for
   
@@ -77,7 +77,7 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
       S=0;
       for( uint i=0; i<N_; i++ )
       {
-        v_[i] = -1.0 + 2*(randomGen->randDblExc());
+        v_[i] = -1.0 + 2*(randomGen.randDblExc());
         S += pow(v_[i],2);
       } //for
     } //while
@@ -88,7 +88,7 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
   {
     for( uint i=0; i<N_; i++ )
     {
-      v_[i] = randomGen->randNorm(0,1);
+      v_[i] = randomGen.randNorm(0,1);
       S += pow(v_[i],2);
     }
   } //else
@@ -101,7 +101,7 @@ Vector_NDim::Vector_NDim(uint N, MTRand* randomGen)
 }
 
 /********************************* Vector_NDim (constructor) *********************************/
-Vector_NDim::Vector_NDim(uint N, MTRand* randomGen, uint start, uint end)
+Vector_NDim::Vector_NDim(uint N, MTRand &randomGen, uint start, uint end)
 {
   N_ = N;
   v_ = new double[N];

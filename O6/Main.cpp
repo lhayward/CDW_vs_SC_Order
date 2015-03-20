@@ -30,14 +30,14 @@ typedef unsigned int  uint;
 std::string getFileSuffix(int argc, char** argv);
 Lattice* readLattice(std::string latticeName, std::string fileName, std::string startStr);
 Model* readModel(std::string modelName, std::string inFileName, std::string startStr, 
-                 std::string outFileName, Lattice* lattice, MTRand* randomGen);
+                 std::string outFileName, Lattice* lattice, MTRand &randomGen);
 
 /**********************************************************************************************
 ******************************************** main *********************************************
 **********************************************************************************************/
 int main(int argc, char** argv) 
 {
-  MTRand            randomGen;
+  //MTRand            randomGen;
   SimParameters*    params;
   Lattice*          lattice;
   Model*            model;
@@ -149,7 +149,7 @@ Lattice* readLattice(std::string latticeName, std::string fileName, std::string 
 *****************           std::string startStr, std::string outFileName, ... ****************
 *****************           Lattice* lattice, MTRand* randomGen)               ***************/
 Model* readModel(std::string modelName, std::string inFileName, std::string startStr, 
-                 std::string outFileName, Lattice* lattice, MTRand* randomGen )
+                 std::string outFileName, Lattice* lattice, MTRand &randomGen )
 {
   Model* result=NULL;
   std::ifstream fin;

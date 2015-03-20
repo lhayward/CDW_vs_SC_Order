@@ -66,7 +66,7 @@ void VectorSpins::print()
 } //print method
 
 /******************************** randomize(MTRand* randomGen) *******************************/
-void VectorSpins::randomize(MTRand* randomGen)
+void VectorSpins::randomize(MTRand &randomGen)
 {
   for( uint i=0; i<N_; i++ )
   {
